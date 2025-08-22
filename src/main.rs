@@ -6,6 +6,7 @@ use serenity::prelude::*;
 use std::fs;
 use std::sync::LazyLock;
 use std::time::Duration;
+use serenity::all::{ChannelId, CreateMessage};
 use uptime_kuma_pusher::UptimePusher;
 
 #[derive(Clone, Deserialize)]
@@ -13,6 +14,7 @@ pub struct Config {
     pub token: String,
     pub min_hours: i64,
     pub uk_url: String,
+    pub log_chat: u64,
 }
 
 struct Handler;
@@ -21,13 +23,10 @@ struct Handler;
 impl EventHandler for Handler {
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
         let user = &new_member.user;
-        println!("{} just joined!", user.name);
 
-        // Example: check account age
         let created_at = user.created_at();
-        println!("Their account was created at: {}", created_at);
+        println!("{} just joined, their account was created at: {}", user.name, created_at);
 
-        // You could kick if too new, e.g. less than 7 days old:
         let now = chrono::Utc::now();
         if (now - *created_at).num_hours() < CONFIG.min_hours {
             if let Err(err) = new_member
@@ -45,6 +44,10 @@ impl EventHandler for Handler {
                 println!("Failed to kick {}: {:?}", user.name, err);
             } else {
                 println!("Kicked {} for being too new!", user.name);
+                let m = CreateMessage::new().content(format!("Kicked {} for being too new!", user.name));
+                if let Err(e) = ChannelId::new(CONFIG.log_chat).send_message(ctx.http, m).await {
+                    dbg!(e);
+                };
             }
         }
     }

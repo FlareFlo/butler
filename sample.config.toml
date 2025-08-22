@@ -3,3 +3,4 @@ token=""
 min_hours=336
 # Uptime Kuma pusher url
 uk_url=""
+log_chat=0
