@@ -6,11 +6,13 @@ use serenity::prelude::*;
 use std::fs;
 use std::sync::LazyLock;
 use std::time::Duration;
+use uptime_kuma_pusher::UptimePusher;
 
 #[derive(Clone, Deserialize)]
 pub struct Config {
     pub token: String,
     pub min_hours: i64,
+    pub uk_url: String,
 }
 
 struct Handler;
@@ -42,7 +44,7 @@ impl EventHandler for Handler {
             {
                 println!("Failed to kick {}: {:?}", user.name, err);
             } else {
-                println!("Kicked {} for being too new!", user.name);    
+                println!("Kicked {} for being too new!", user.name);
             }
         }
     }
@@ -59,6 +61,7 @@ static CONFIG: LazyLock<Config> = LazyLock::new(|| {
 #[tokio::main]
 async fn main() {
     let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_MEMBERS;
+    UptimePusher::new(&CONFIG.uk_url, true).spawn_background();
 
     let mut client = Client::builder(&CONFIG.token, intents)
         .event_handler(Handler)

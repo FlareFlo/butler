@@ -1,3 +1,5 @@
 token=""
 # Some integer (default 2 weeks)
 min_hours=336
+# Uptime Kuma pusher url
+uk_url=""
