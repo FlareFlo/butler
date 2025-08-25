@@ -11,3 +11,4 @@ toml = "0.9.5"
 serde = { version = "1.0.219", features = ["derive"] }
 humantime = "2.2.0"
 uptime_kuma_pusher = { git = "https://github.com/FlareFlo/uptime_kuma_pusher.git", version = "0.3.0" }
+ctrlc = { version = "3.4.7", features = ["termination"] }

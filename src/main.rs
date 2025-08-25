@@ -6,6 +6,7 @@ use serenity::model::guild::Member;
 use serenity::prelude::*;
 use std::fs;
 use std::ops::Add;
+use std::process::exit;
 use std::sync::LazyLock;
 use std::time::Duration;
 use uptime_kuma_pusher::UptimePusher;
@@ -88,6 +89,10 @@ static CONFIG: LazyLock<Config> = LazyLock::new(|| {
 
 #[tokio::main]
 async fn main() {
+    ctrlc::set_handler(move || {
+        exit(1);
+    }).unwrap();
+
     let intents = GatewayIntents::GUILDS
         | GatewayIntents::GUILD_MEMBERS
         | GatewayIntents::DIRECT_MESSAGES
