@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use serenity::all::{ChannelId, CreateMessage, Message};
+use serenity::all::{Activity, ChannelId, CreateMessage, Message};
 use serenity::async_trait;
 use serenity::model::gateway::Ready;
 use serenity::model::guild::Member;
@@ -9,6 +9,7 @@ use std::ops::Add;
 use std::process::exit;
 use std::sync::LazyLock;
 use std::time::Duration;
+use serenity::gateway::ActivityData;
 use uptime_kuma_pusher::UptimePusher;
 
 #[derive(Clone, Deserialize)]
@@ -70,8 +71,9 @@ impl EventHandler for Handler {
         user.direct_message(&ctx.http, user_message).await.unwrap();
     }
 
-    async fn ready(&self, _: Context, ready: Ready) {
+    async fn ready(&self, cx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
+        cx.set_activity(Some(ActivityData::watching("for bad actors")))
     }
 
     async fn message(&self, _ctx: Context, msg: Message) {
