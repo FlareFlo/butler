@@ -33,11 +33,6 @@ impl EventHandler for Handler {
             user.name, created_at
         );
 
-        // Skip if user is old enough
-        let now = chrono::Utc::now();
-        if (now - *created_at).num_hours() > CONFIG.min_hours as _ {
-            return;
-        }
 
         if let Err(err) = new_member
             .kick_with_reason(&ctx.http, "Kicked for brand new account")
