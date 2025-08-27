@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use serenity::all::{Activity, ChannelId, CreateMessage, Message};
+use serenity::all::{ChannelId, CreateMessage, Message};
 use serenity::async_trait;
 use serenity::model::gateway::Ready;
 use serenity::model::guild::Member;
@@ -68,7 +68,9 @@ impl EventHandler for Handler {
                 CONFIG.min_hours * 60 * 60
             ))
         ));
-        user.direct_message(&ctx.http, user_message).await.unwrap();
+        if let Err(e) = user.direct_message(&ctx.http, user_message).await {
+            dbg!(e);
+        }
     }
 
     async fn ready(&self, cx: Context, ready: Ready) {
