@@ -80,9 +80,12 @@ impl EventHandler for Handler {
         };
     }
 
-    async fn message(&self, _ctx: Context, msg: Message) {
+    async fn message(&self, ctx: Context, msg: Message) {
         // Ignore non-DMs
         if msg.guild_id.is_some() {
+            return;
+        }
+        if ctx.cache.current_user().id == msg.author.id {
             return;
         }
         eprintln!("{} said {}", msg.author.name, msg.content);
