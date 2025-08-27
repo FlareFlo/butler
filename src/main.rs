@@ -39,6 +39,21 @@ impl EventHandler for Handler {
             return;
         }
 
+        // DM user for kick reason, happens before kick because it cannot talk to users
+        let good_on = created_at
+            .add(Duration::from_secs(CONFIG.min_hours * 60 * 60))
+            .timestamp();
+        let user_message = CreateMessage::new().content(format!(
+            "Your account must be at least {} old.\nYou may rejoin on <t:{good_on}:f>\nDO NOT REPLY TO THIS MESSAGE, IT IS AUTOMATED AND WILL NOT BE READ OR RESPONDED TO!",
+            humantime::format_duration(Duration::from_secs(
+                CONFIG.min_hours * 60 * 60
+            ))
+        ));
+        if let Err(e) = user.direct_message(&ctx.http, user_message).await {
+            dbg!(e);
+        }
+
+        // Kick them
         if let Err(err) = new_member
             .kick_with_reason(&ctx.http, "Kicked for brand new account")
             .await
@@ -57,20 +72,6 @@ impl EventHandler for Handler {
         {
             dbg!(e);
         };
-
-        // DM user for kick reason
-        let good_on = created_at
-            .add(Duration::from_secs(CONFIG.min_hours * 60 * 60))
-            .timestamp();
-        let user_message = CreateMessage::new().content(format!(
-            "Your account must be at least {} old.\nYou may rejoin on <t:{good_on}:f>\nDO NOT REPLY TO THIS MESSAGE, IT IS AUTOMATED AND WILL NOT BE READ OR RESPONDED TO!",
-            humantime::format_duration(Duration::from_secs(
-                CONFIG.min_hours * 60 * 60
-            ))
-        ));
-        if let Err(e) = user.direct_message(&ctx.http, user_message).await {
-            dbg!(e);
-        }
     }
 
     async fn ready(&self, cx: Context, ready: Ready) {
