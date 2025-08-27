@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use serenity::all::{ChannelId, CreateMessage, Message};
 use serenity::async_trait;
+use serenity::gateway::ActivityData;
 use serenity::model::gateway::Ready;
 use serenity::model::guild::Member;
 use serenity::prelude::*;
@@ -9,7 +10,6 @@ use std::ops::Add;
 use std::process::exit;
 use std::sync::LazyLock;
 use std::time::Duration;
-use serenity::gateway::ActivityData;
 use uptime_kuma_pusher::UptimePusher;
 
 #[derive(Clone, Deserialize)]
@@ -53,19 +53,25 @@ impl EventHandler for Handler {
             dbg!(e);
         }
 
+        let reason = format!(
+            "Kicked {} <@{}>\nAccount created on: {}\nVerification status: {}",
+            user.name,
+            user.id,
+            created_at,
+            user.verified
+                .map(|e| e.to_string())
+                .unwrap_or_else(|| "N/A".to_owned())
+        );
+
         // Kick them
-        if let Err(err) = new_member
-            .kick_with_reason(&ctx.http, "Kicked for brand new account")
-            .await
-        {
+        if let Err(err) = new_member.kick_with_reason(&ctx.http, &reason).await {
             println!("Failed to kick {}: {:?}", user.name, err);
         } else {
             println!("Kicked {} for being too new!", user.name);
         }
 
         // Log the kick
-        let log_message =
-            CreateMessage::new().content(format!("Kicked {} for being too new!", user.name));
+        let log_message = CreateMessage::new().content(&reason);
         if let Err(e) = ChannelId::new(CONFIG.log_chat)
             .send_message(&ctx.http, log_message)
             .await
@@ -74,17 +80,17 @@ impl EventHandler for Handler {
         };
     }
 
-    async fn ready(&self, cx: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
-        cx.set_activity(Some(ActivityData::watching("for bad actors")))
-    }
-
     async fn message(&self, _ctx: Context, msg: Message) {
         // Ignore non-DMs
         if msg.guild_id.is_some() {
             return;
         }
         eprintln!("{} said {}", msg.author.name, msg.content);
+    }
+
+    async fn ready(&self, cx: Context, ready: Ready) {
+        println!("{} is connected!", ready.user.name);
+        cx.set_activity(Some(ActivityData::watching("for bad actors")))
     }
 }
 
@@ -96,7 +102,8 @@ static CONFIG: LazyLock<Config> = LazyLock::new(|| {
 async fn main() {
     ctrlc::set_handler(move || {
         exit(1);
-    }).unwrap();
+    })
+    .unwrap();
 
     let intents = GatewayIntents::GUILDS
         | GatewayIntents::GUILD_MEMBERS
