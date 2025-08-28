@@ -10,6 +10,8 @@ use std::ops::Add;
 use std::process::exit;
 use std::sync::LazyLock;
 use std::time::Duration;
+use tracing::{error, info};
+use tracing_subscriber::FmtSubscriber;
 use uptime_kuma_pusher::UptimePusher;
 
 #[derive(Clone, Deserialize)]
@@ -28,7 +30,7 @@ impl EventHandler for Handler {
         let user = &new_member.user;
 
         let created_at = user.created_at();
-        println!(
+        info!(
             "{} just joined, their account was created at: {}",
             user.name, created_at
         );
@@ -50,7 +52,7 @@ impl EventHandler for Handler {
             ))
         ));
         if let Err(e) = user.direct_message(&ctx.http, user_message).await {
-            dbg!(e);
+            error!("{e:?}");
         }
 
         let reason = format!(
@@ -65,9 +67,9 @@ impl EventHandler for Handler {
 
         // Kick them
         if let Err(err) = new_member.kick_with_reason(&ctx.http, &reason).await {
-            println!("Failed to kick {}: {:?}", user.name, err);
+            error!("Failed to kick {}: {:?}", user.name, err);
         } else {
-            println!("Kicked {} for being too new!", user.name);
+            info!("Kicked {} for being too new!", user.name);
         }
 
         // Log the kick
@@ -88,11 +90,11 @@ impl EventHandler for Handler {
         if ctx.cache.current_user().id == msg.author.id {
             return;
         }
-        eprintln!("{} said {}", msg.author.name, msg.content);
+        info!("{} said {}", msg.author.name, msg.content);
     }
 
     async fn ready(&self, cx: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
+        info!("{} is connected!", ready.user.name);
         cx.set_activity(Some(ActivityData::watching("for bad actors")))
     }
 }
@@ -103,7 +105,12 @@ static CONFIG: LazyLock<Config> = LazyLock::new(|| {
 
 #[tokio::main]
 async fn main() {
+    tracing::subscriber::set_global_default(
+        FmtSubscriber::builder().finish(),
+    ).expect("tracing setup failed");
+
     ctrlc::set_handler(move || {
+        error!("Got shutdown signal");
         exit(1);
     })
     .unwrap();
@@ -120,6 +127,6 @@ async fn main() {
         .expect("Err creating client");
 
     if let Err(why) = client.start().await {
-        println!("Client error: {:?}", why);
+        error!("Client error: {:?}", why);
     }
 }
