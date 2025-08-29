@@ -22,7 +22,8 @@ pub struct Config {
     pub log_chat: u64,
 }
 
-struct Handler;
+
+struct Handler {}
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -46,11 +47,11 @@ impl EventHandler for Handler {
             .add(Duration::from_secs(CONFIG.min_hours * 60 * 60))
             .timestamp();
         let user_message = CreateMessage::new().content(format!(
-            "Your account must be at least {} old.\nYou may rejoin on <t:{good_on}:f>\nDO NOT REPLY TO THIS MESSAGE, IT IS AUTOMATED AND WILL NOT BE READ OR RESPONDED TO!",
-            humantime::format_duration(Duration::from_secs(
-                CONFIG.min_hours * 60 * 60
-            ))
-        ));
+			"Your account must be at least {} old.\nYou may rejoin on <t:{good_on}:f>\nDO NOT REPLY TO THIS MESSAGE, IT IS AUTOMATED AND WILL NOT BE READ OR RESPONDED TO!",
+			humantime::format_duration(Duration::from_secs(
+				CONFIG.min_hours * 60 * 60
+			))
+		));
         if let Err(e) = user.direct_message(&ctx.http, user_message).await {
             error!("{e:?}");
         }
@@ -105,9 +106,8 @@ static CONFIG: LazyLock<Config> = LazyLock::new(|| {
 
 #[tokio::main]
 async fn main() {
-    tracing::subscriber::set_global_default(
-        FmtSubscriber::builder().finish(),
-    ).expect("tracing setup failed");
+    tracing::subscriber::set_global_default(FmtSubscriber::builder().finish())
+        .expect("tracing setup failed");
 
     ctrlc::set_handler(move || {
         error!("Got shutdown signal");
@@ -122,7 +122,7 @@ async fn main() {
     UptimePusher::new(&CONFIG.uk_url, true).spawn_background();
 
     let mut client = Client::builder(&CONFIG.token, intents)
-        .event_handler(Handler)
+        .event_handler(Handler {})
         .await
         .expect("Err creating client");
 
