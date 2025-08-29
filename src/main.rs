@@ -10,7 +10,7 @@ use std::ops::Add;
 use std::process::exit;
 use std::sync::LazyLock;
 use std::time::Duration;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use tracing_subscriber::FmtSubscriber;
 use uptime_kuma_pusher::UptimePusher;
 
@@ -69,7 +69,7 @@ impl EventHandler for Handler {
         if let Err(err) = new_member.kick_with_reason(&ctx.http, &reason).await {
             error!("Failed to kick {}: {:?}", user.name, err);
         } else {
-            info!("Kicked {} for being too new!", user.name);
+            warn!("Kicked {} for being too new!", user.name);
         }
 
         // Log the kick
