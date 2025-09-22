@@ -8,6 +8,7 @@ use serenity::prelude::*;
 use std::fs;
 use std::ops::Add;
 use std::process::exit;
+use std::sync::Arc;
 use std::sync::LazyLock;
 use std::time::Duration;
 use tracing::{error, info, warn};
@@ -20,8 +21,8 @@ pub struct Config {
     pub min_hours: u64,
     pub uk_url: String,
     pub log_chat: u64,
+    pub honeypot_channels: Vec<ChannelId>,
 }
-
 
 struct Handler {}
 
@@ -84,20 +85,44 @@ impl EventHandler for Handler {
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
-        // Ignore non-DMs
-        if msg.guild_id.is_some() {
-            return;
-        }
-        if ctx.cache.current_user().id == msg.author.id {
-            return;
-        }
-        info!("{} said {}", msg.author.name, msg.content);
+        handle_dm(Arc::clone(ctx), &msg).await;
+        handle_honeypot(Arc::clone(ctx), &msg).await;
     }
 
     async fn ready(&self, cx: Context, ready: Ready) {
         info!("{} is connected!", ready.user.name);
         cx.set_activity(Some(ActivityData::watching("for bad actors")))
     }
+}
+
+async fn handle_honeypot(ctx: Context, msg: &Message) {
+    if let Some(member) = msg.member(ctx.cache).await
+        && CONFIG.honeypot_channels.contains(&msg.channel_id)
+    {
+        if let Err(err) = member
+            .kick_with_reason(&ctx.http, "Kicked for using honeypot")
+            .await
+        {
+            error!("Failed to kick {}: {:?}", member.name, err);
+        } else {
+            warn!(
+                "Kicked {} for sending message into honeypot {}",
+                member.name,
+                msg.channel(ctx.cache).await.unwrap().guild().unwrap().name
+            );
+        }
+    }
+}
+
+async fn handle_dm(ctx: Context, msg: &Message) {
+    // Ignore non-DMs
+    if msg.guild_id.is_some() {
+        return;
+    }
+    if ctx.cache.current_user().id == msg.author.id {
+        return;
+    }
+    info!("{} said {}", msg.author.name, msg.content);
 }
 
 static CONFIG: LazyLock<Config> = LazyLock::new(|| {
