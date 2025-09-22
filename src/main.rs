@@ -8,7 +8,6 @@ use serenity::prelude::*;
 use std::fs;
 use std::ops::Add;
 use std::process::exit;
-use std::sync::Arc;
 use std::sync::LazyLock;
 use std::time::Duration;
 use tracing::{error, info, warn};
@@ -85,8 +84,8 @@ impl EventHandler for Handler {
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
-        handle_dm(Arc::clone(ctx), &msg).await;
-        handle_honeypot(Arc::clone(ctx), &msg).await;
+        handle_dm(ctx.clone(), &msg).await;
+        handle_honeypot(ctx.clone(), &msg).await;
     }
 
     async fn ready(&self, cx: Context, ready: Ready) {
@@ -96,19 +95,19 @@ impl EventHandler for Handler {
 }
 
 async fn handle_honeypot(ctx: Context, msg: &Message) {
-    if let Some(member) = msg.member(ctx.cache).await
+    if let Ok(member) = msg.member(ctx.clone()).await
         && CONFIG.honeypot_channels.contains(&msg.channel_id)
     {
         if let Err(err) = member
-            .kick_with_reason(&ctx.http, "Kicked for using honeypot")
+            .kick_with_reason(ctx.clone(), "Kicked for using honeypot")
             .await
         {
-            error!("Failed to kick {}: {:?}", member.name, err);
+            error!("Failed to kick {}: {:?}", member.user.name, err);
         } else {
             warn!(
                 "Kicked {} for sending message into honeypot {}",
-                member.name,
-                msg.channel(ctx.cache).await.unwrap().guild().unwrap().name
+                member.user.name,
+                msg.channel(ctx).await.unwrap().guild().unwrap().name
             );
         }
     }
