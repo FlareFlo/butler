@@ -99,12 +99,11 @@ async fn handle_honeypot(ctx: Context, msg: &Message) {
     if let Ok(member) = msg.member(ctx.clone()).await
         && CONFIG.honeypot_channels.contains(&msg.channel_id.get())
     {
-        // Skip if role is whitelisted
-        if let Some(role) = msg
-            .guild(&ctx.cache)
-            .expect("user has guild")
-            .member_highest_role(&member)
-            && CONFIG.honeypot_safe_roles.contains(&role.id.get())
+        // Ignore whitelisted roles
+        if CONFIG
+            .honeypot_safe_roles
+            .iter()
+            .any(|&safe| member.roles.iter().any(|role| safe == role.get()))
         {
             return;
         }
