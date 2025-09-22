@@ -21,6 +21,7 @@ pub struct Config {
     pub uk_url: String,
     pub log_chat: u64,
     pub honeypot_channels: Vec<u64>,
+    pub honeypot_safe_roles: Vec<u64>,
 }
 
 struct Handler {}
@@ -98,6 +99,16 @@ async fn handle_honeypot(ctx: Context, msg: &Message) {
     if let Ok(member) = msg.member(ctx.clone()).await
         && CONFIG.honeypot_channels.contains(&msg.channel_id.get())
     {
+        // Skip if role is whitelisted
+        if let Some(role) = msg
+            .guild(&ctx.cache)
+            .expect("user has guild")
+            .member_highest_role(&member)
+            && CONFIG.honeypot_safe_roles.contains(&role.id.get())
+        {
+            return;
+        }
+
         if let Err(err) = member
             .kick_with_reason(ctx.clone(), "Kicked for using honeypot")
             .await
@@ -107,7 +118,12 @@ async fn handle_honeypot(ctx: Context, msg: &Message) {
             warn!(
                 "Kicked {} for sending message into honeypot {}",
                 member.user.name,
-                msg.channel(ctx).await.unwrap().guild().unwrap().name
+                msg.channel(ctx)
+                    .await
+                    .unwrap()
+                    .guild()
+                    .expect("user to be a member of this guild")
+                    .name
             );
         }
     }

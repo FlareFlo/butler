@@ -6,3 +6,5 @@ uk_url=""
 log_chat=0
 # Array of channel IDs that get instant kicks
 honeypot_channels = [0]
+# Role IDs that will not be punished
+honeypot_safe_roles = [0]
