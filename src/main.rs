@@ -95,7 +95,6 @@ impl EventHandler for Handler {
 }
 
 async fn handle_honeypot(ctx: Context, msg: &Message) {
-    debug!("Message: {} in {}", msg.content, msg.channel_id.get());
     if let Ok(member) = msg.member(ctx.clone()).await
         && CONFIG.honeypot_channels.contains(msg.channel_id.get())
     {
