@@ -10,7 +10,7 @@ use std::ops::Add;
 use std::process::exit;
 use std::sync::LazyLock;
 use std::time::Duration;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 use tracing_subscriber::FmtSubscriber;
 use uptime_kuma_pusher::UptimePusher;
 
@@ -20,7 +20,7 @@ pub struct Config {
     pub min_hours: u64,
     pub uk_url: String,
     pub log_chat: u64,
-    pub honeypot_channels: Vec<ChannelId>,
+    pub honeypot_channels: Vec<u64>,
 }
 
 struct Handler {}
@@ -95,8 +95,9 @@ impl EventHandler for Handler {
 }
 
 async fn handle_honeypot(ctx: Context, msg: &Message) {
+    debug!("Message: {} in {}", msg.content, msg.channel_id.get());
     if let Ok(member) = msg.member(ctx.clone()).await
-        && CONFIG.honeypot_channels.contains(&msg.channel_id)
+        && CONFIG.honeypot_channels.contains(msg.channel_id.get())
     {
         if let Err(err) = member
             .kick_with_reason(ctx.clone(), "Kicked for using honeypot")
