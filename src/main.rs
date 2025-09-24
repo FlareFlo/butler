@@ -75,13 +75,7 @@ impl EventHandler for Handler {
         }
 
         // Log the kick
-        let log_message = CreateMessage::new().content(&reason);
-        if let Err(e) = ChannelId::new(CONFIG.log_chat)
-            .send_message(&ctx.http, log_message)
-            .await
-        {
-            dbg!(e);
-        };
+        log_discord(&ctx, &reason).await;
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
@@ -93,6 +87,16 @@ impl EventHandler for Handler {
         info!("{} is connected!", ready.user.name);
         cx.set_activity(Some(ActivityData::watching("for bad actors")))
     }
+}
+
+async fn log_discord(ctx: &Context, reason: &str) {
+    let log_message = CreateMessage::new().content(reason);
+    if let Err(e) = ChannelId::new(CONFIG.log_chat)
+        .send_message(&ctx.http, log_message)
+        .await
+    {
+        dbg!(e);
+    };
 }
 
 async fn handle_honeypot(ctx: Context, msg: &Message) {
@@ -109,21 +113,22 @@ async fn handle_honeypot(ctx: Context, msg: &Message) {
         }
 
         if let Err(err) = member
-            .kick_with_reason(ctx.clone(), "Kicked for using honeypot")
+            .ban_with_reason(ctx.clone(), 1, "Banned for using honeypot")
             .await
         {
-            error!("Failed to kick {}: {:?}", member.user.name, err);
+            error!("Failed to ban {}: {:?}", member.user.name, err);
         } else {
             warn!(
-                "Kicked {} for sending message into honeypot {}",
+                "Banned {} for sending message into honeypot {}",
                 member.user.name,
-                msg.channel(ctx)
+                msg.channel(&ctx)
                     .await
                     .unwrap()
                     .guild()
                     .expect("user to be a member of this guild")
                     .name
             );
+            log_discord(&ctx, &format!("banned {} for using honeypot", member.user.name)).await;
         }
     }
 }
@@ -158,6 +163,7 @@ async fn main() {
         | GatewayIntents::GUILD_MEMBERS
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::GUILD_MODERATION
         | GatewayIntents::MESSAGE_CONTENT;
     UptimePusher::new(&CONFIG.uk_url, true).spawn_background();
 
