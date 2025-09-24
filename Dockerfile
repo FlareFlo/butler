@@ -2,15 +2,15 @@ FROM docker.io/rust:1.90 as builder
 
 WORKDIR /usr/src/app
 
-# Get lockfile
+# Get project code
 COPY Cargo.toml Cargo.lock ./
+COPY ./src ./src
 
 # Cache deps and target folder
 RUN --mount=type=cache,target=/usr/src/app/target \
     cargo fetch
 
 # Build
-COPY ./src ./src
 RUN cargo build --release
 
 FROM docker.io/debian:bookworm-slim
