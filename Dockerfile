@@ -7,7 +7,7 @@ COPY ./src ./src
 
 RUN cargo build --release
 
-FROM docker.io/archlinux
+FROM docker.io/debian:bookworm-slim
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/target/release/butler .
 
