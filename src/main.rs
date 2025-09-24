@@ -128,7 +128,11 @@ async fn handle_honeypot(ctx: Context, msg: &Message) {
                     .expect("user to be a member of this guild")
                     .name
             );
-            log_discord(&ctx, &format!("banned {} for using honeypot", member.user.name)).await;
+            log_discord(
+                &ctx,
+                &format!("Banned {} for using honeypot", member.user.name),
+            )
+            .await;
         }
     }
 }
