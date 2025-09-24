@@ -13,6 +13,6 @@ RUN --mount=type=bind,source=./target,target=/usr/src/app/target,rw \
 
 FROM docker.io/debian:bookworm-slim
 WORKDIR /usr/src/app
-COPY --from=builder /usr/src/app/target/release/butler .
+COPY ./target/release/butler .
 
 CMD ["./butler"]
