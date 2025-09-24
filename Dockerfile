@@ -6,12 +6,10 @@ WORKDIR /usr/src/app
 COPY Cargo.toml Cargo.lock ./
 COPY ./src ./src
 
-# Cache deps and target folder
-RUN --mount=type=cache,target=/usr/src/app/target \
-    cargo fetch
-
+# Re-use locally mounted target folder
 # Build
-RUN cargo build --release
+RUN --mount=type=bind,source=./target,target=/usr/src/app/target \
+    cargo build --release
 
 FROM docker.io/debian:bookworm-slim
 WORKDIR /usr/src/app
