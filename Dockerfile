@@ -8,7 +8,7 @@ COPY ./src ./src
 
 # Re-use locally mounted target folder
 # Build
-RUN --mount=type=bind,source=./target,target=/usr/src/app/target \
+RUN --mount=type=bind,source=./target,target=/usr/src/app/target,rw \
     cargo build --release
 
 FROM docker.io/debian:bookworm-slim
