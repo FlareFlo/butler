@@ -4,7 +4,7 @@ use std::ops::Add;
 use std::time::Duration;
 use tracing::{error, info, warn};
 
-pub async fn check_account_age(ctx: &Context, new_member: &Member) -> bool {
+pub async fn check_account_age(ctx: &Context, new_member: &Member) {
     let user = &new_member.user;
 
     let created_at = user.created_at();
@@ -16,7 +16,7 @@ pub async fn check_account_age(ctx: &Context, new_member: &Member) -> bool {
     // Skip if user is old enough
     let now = chrono::Utc::now();
     if (now - *created_at).num_hours() > CONFIG.min_hours as _ {
-        return true;
+        return
     }
 
     // DM user for kick reason, happens before kick because it cannot talk to users
@@ -52,5 +52,4 @@ pub async fn check_account_age(ctx: &Context, new_member: &Member) -> bool {
 
     // Log the kick
     crate::util::log_discord(&ctx, &reason).await;
-    false
 }

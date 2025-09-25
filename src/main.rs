@@ -32,9 +32,7 @@ struct Handler {}
 #[async_trait]
 impl EventHandler for Handler {
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
-        if check_account_age(&ctx, &new_member).await {
-            return;
-        }
+        check_account_age(&ctx, &new_member).await;
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
