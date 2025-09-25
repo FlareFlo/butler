@@ -15,25 +15,25 @@ pub async fn handle_honeypot(ctx: Context, msg: &Message) {
             return;
         }
 
+        let reason = format!( "Banned {} for sending message into honeypot {}",
+                              member.user.name,
+                              msg.channel(&ctx)
+                                  .await
+                                  .unwrap()
+                                  .guild()
+                                  .expect("user to be a member of this guild")
+                                  .name);
+
         if let Err(err) = member
-            .ban_with_reason(ctx.clone(), 1, "Banned for using honeypot")
+            .ban_with_reason(ctx.clone(), 1, &reason)
             .await
         {
             error!("Failed to ban {}: {:?}", member.user.name, err);
         } else {
-            warn!(
-                "Banned {} for sending message into honeypot {}",
-                member.user.name,
-                msg.channel(&ctx)
-                    .await
-                    .unwrap()
-                    .guild()
-                    .expect("user to be a member of this guild")
-                    .name
-            );
+            warn!("{reason}");
             util::log_discord(
                 &ctx,
-                &format!("Banned {} for using honeypot", member.user.name),
+                &reason,
             )
             .await;
         }
