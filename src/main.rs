@@ -1,16 +1,19 @@
+mod account_age;
+mod util;
+mod honeypot;
+
+use crate::account_age::check_account_age;
 use serde::Deserialize;
-use serenity::all::{ChannelId, CreateMessage, Message};
+use serenity::all::Message;
 use serenity::async_trait;
 use serenity::gateway::ActivityData;
 use serenity::model::gateway::Ready;
 use serenity::model::guild::Member;
 use serenity::prelude::*;
 use std::fs;
-use std::ops::Add;
 use std::process::exit;
 use std::sync::LazyLock;
-use std::time::Duration;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 use tracing_subscriber::FmtSubscriber;
 use uptime_kuma_pusher::UptimePusher;
 
@@ -29,111 +32,19 @@ struct Handler {}
 #[async_trait]
 impl EventHandler for Handler {
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
-        let user = &new_member.user;
-
-        let created_at = user.created_at();
-        info!(
-            "{} just joined, their account was created at: {}",
-            user.name, created_at
-        );
-
-        // Skip if user is old enough
-        let now = chrono::Utc::now();
-        if (now - *created_at).num_hours() > CONFIG.min_hours as _ {
+        if check_account_age(&ctx, &new_member).await {
             return;
         }
-
-        // DM user for kick reason, happens before kick because it cannot talk to users
-        let good_on = created_at
-            .add(Duration::from_secs(CONFIG.min_hours * 60 * 60))
-            .timestamp();
-        let user_message = CreateMessage::new().content(format!(
-			"Your account must be at least {} old.\nYou may rejoin on <t:{good_on}:f>\nDO NOT REPLY TO THIS MESSAGE, IT IS AUTOMATED AND WILL NOT BE READ OR RESPONDED TO!",
-			humantime::format_duration(Duration::from_secs(
-				CONFIG.min_hours * 60 * 60
-			))
-		));
-        if let Err(e) = user.direct_message(&ctx.http, user_message).await {
-            error!("{e:?}");
-        }
-
-        let reason = format!(
-            "Kicked {} <@{}>\nAccount created on: {}\nVerification status: {}",
-            user.name,
-            user.id,
-            created_at,
-            user.verified
-                .map(|e| e.to_string())
-                .unwrap_or_else(|| "N/A".to_owned())
-        );
-
-        // Kick them
-        if let Err(err) = new_member.kick_with_reason(&ctx.http, &reason).await {
-            error!("Failed to kick {}: {:?}", user.name, err);
-        } else {
-            warn!("Kicked {} for being too new!", user.name);
-        }
-
-        // Log the kick
-        log_discord(&ctx, &reason).await;
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
         handle_dm(ctx.clone(), &msg).await;
-        handle_honeypot(ctx.clone(), &msg).await;
+        honeypot::handle_honeypot(ctx.clone(), &msg).await;
     }
 
     async fn ready(&self, cx: Context, ready: Ready) {
         info!("{} is connected!", ready.user.name);
         cx.set_activity(Some(ActivityData::watching("for bad actors")))
-    }
-}
-
-async fn log_discord(ctx: &Context, reason: &str) {
-    let log_message = CreateMessage::new().content(reason);
-    if let Err(e) = ChannelId::new(CONFIG.log_chat)
-        .send_message(&ctx.http, log_message)
-        .await
-    {
-        dbg!(e);
-    };
-}
-
-async fn handle_honeypot(ctx: Context, msg: &Message) {
-    if let Ok(member) = msg.member(ctx.clone()).await
-        && CONFIG.honeypot_channels.contains(&msg.channel_id.get())
-    {
-        // Ignore whitelisted roles
-        if CONFIG
-            .honeypot_safe_roles
-            .iter()
-            .any(|&safe| member.roles.iter().any(|role| safe == role.get()))
-        {
-            return;
-        }
-
-        if let Err(err) = member
-            .ban_with_reason(ctx.clone(), 1, "Banned for using honeypot")
-            .await
-        {
-            error!("Failed to ban {}: {:?}", member.user.name, err);
-        } else {
-            warn!(
-                "Banned {} for sending message into honeypot {}",
-                member.user.name,
-                msg.channel(&ctx)
-                    .await
-                    .unwrap()
-                    .guild()
-                    .expect("user to be a member of this guild")
-                    .name
-            );
-            log_discord(
-                &ctx,
-                &format!("Banned {} for using honeypot", member.user.name),
-            )
-            .await;
-        }
     }
 }
 
