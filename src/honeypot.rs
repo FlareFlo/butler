@@ -15,7 +15,7 @@ pub async fn handle_honeypot(ctx: Context, msg: &Message) {
             return;
         }
 
-        let reason = format!( "Banned {} for sending message into honeypot {}",
+        let reason = format!( "Kicked {} for sending message into honeypot {}",
                               member.user.name,
                               msg.channel(&ctx)
                                   .await
@@ -25,7 +25,7 @@ pub async fn handle_honeypot(ctx: Context, msg: &Message) {
                                   .name);
 
         if let Err(err) = member
-            .ban_with_reason(ctx.clone(), 1, &reason)
+            .kick_with_reason(ctx.clone(), &reason)
             .await
         {
             error!("Failed to ban {}: {:?}", member.user.name, err);
