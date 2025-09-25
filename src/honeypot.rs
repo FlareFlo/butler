@@ -1,5 +1,4 @@
-use serenity::all::{ChannelType, GetMessages, GuildChannel};
-use serenity::all::Channel;
+use serenity::all::{GetMessages};
 use serenity::all::{Context, Message};
 use time::{Duration, UtcDateTime};
 use tracing::{error, warn};
