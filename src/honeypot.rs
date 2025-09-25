@@ -1,6 +1,6 @@
 use serenity::all::{GetMessages};
 use serenity::all::{Context, Message};
-use time::{Duration, UtcDateTime};
+use time::{Duration, OffsetDateTime};
 use tracing::{error, warn};
 use crate::{util, CONFIG};
 
@@ -49,7 +49,7 @@ pub async fn cleanup_last_hour(ctx: &Context, msg: &Message) {
     let guild_id = msg.guild_id.expect("we know its a guild");
 
     let user_id = msg.author.id;
-    let one_hour_ago = UtcDateTime::now() - Duration::hours(1);
+    let one_hour_ago = OffsetDateTime::now_local().expect("to get local TZ") - Duration::hours(1);
 
     // Get all channels in the guild
     let channels = guild_id.channels(&ctx.http).await.unwrap();
