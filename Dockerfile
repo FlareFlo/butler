@@ -11,6 +11,5 @@ RUN cargo build --release
 
 FROM docker.io/debian:bookworm-slim
 WORKDIR /usr/src/app
-COPY ./target/release/butler .
-
+COPY --from=builder /usr/src/app/target/release/butler .
 CMD ["./butler"]
