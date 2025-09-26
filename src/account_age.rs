@@ -2,7 +2,7 @@ use crate::{ButlerResult, CONFIG};
 use serenity::all::{Context, CreateMessage, Member};
 use std::ops::Add;
 use std::time::Duration;
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 
 pub async fn check_account_age(ctx: &Context, new_member: &Member) -> ButlerResult<()> {
     let user = &new_member.user;
