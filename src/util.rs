@@ -1,5 +1,5 @@
-use serenity::all::{ChannelId, Context, CreateMessage};
 use crate::CONFIG;
+use serenity::all::{ChannelId, Context, CreateMessage};
 
 pub async fn log_discord(ctx: &Context, reason: &str) {
     let log_message = CreateMessage::new().content(reason);

@@ -1,10 +1,10 @@
-use crate::CONFIG;
+use crate::{ButlerResult, CONFIG};
 use serenity::all::{Context, CreateMessage, Member};
 use std::ops::Add;
 use std::time::Duration;
 use tracing::{error, info, warn};
 
-pub async fn check_account_age(ctx: &Context, new_member: &Member) {
+pub async fn check_account_age(ctx: &Context, new_member: &Member) -> ButlerResult<()> {
     let user = &new_member.user;
 
     let created_at = user.created_at();
@@ -16,7 +16,7 @@ pub async fn check_account_age(ctx: &Context, new_member: &Member) {
     // Skip if user is old enough
     let now = chrono::Utc::now();
     if (now - *created_at).num_hours() > CONFIG.min_hours as _ {
-        return
+        return Ok(());
     }
 
     // DM user for kick reason, happens before kick because it cannot talk to users
@@ -29,9 +29,7 @@ pub async fn check_account_age(ctx: &Context, new_member: &Member) {
                 CONFIG.min_hours * 60 * 60
             ))
         ));
-    if let Err(e) = user.direct_message(&ctx.http, user_message).await {
-        error!("{e:?}");
-    }
+    user.direct_message(&ctx.http, user_message).await?;
 
     let reason = format!(
         "Kicked {} <@{}>\nAccount created on: {}\nVerification status: {}",
@@ -44,12 +42,10 @@ pub async fn check_account_age(ctx: &Context, new_member: &Member) {
     );
 
     // Kick them
-    if let Err(err) = new_member.kick_with_reason(&ctx.http, &reason).await {
-        error!("Failed to kick {}: {:?}", user.name, err);
-    } else {
-        warn!("Kicked {} for being too new!", user.name);
-    }
+    new_member.kick_with_reason(&ctx.http, &reason).await?;
+    warn!("Kicked {} for being too new!", user.name);
 
     // Log the kick
     crate::util::log_discord(&ctx, &reason).await;
+    Ok(())
 }
