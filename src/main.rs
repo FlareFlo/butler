@@ -39,13 +39,13 @@ struct Handler {
 impl EventHandler for Handler {
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
         let res = self.check_account_age(&ctx, &new_member).await;
-        self.process_result(&ctx, res).await;
+        self.process_result(&ctx, res, Some(new_member.guild_id)).await;
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
         handle_dm(ctx.clone(), &msg).await;
         let res = self.handle_honeypot(ctx.clone(), &msg).await;
-        self.process_result(&ctx, res).await;
+        self.process_result(&ctx, res, msg.guild_id).await;
     }
 
     async fn ready(&self, cx: Context, ready: Ready) {

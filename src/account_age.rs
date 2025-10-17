@@ -47,7 +47,7 @@ impl Handler {
         warn!("Kicked {} for being too new!", user.name);
 
         // Log the kick
-        self.log_discord(&ctx, &reason).await;
+        self.log_discord(&ctx, &reason, new_member.guild_id).await?;
         Ok(())
     }
 }

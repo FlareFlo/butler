@@ -23,7 +23,7 @@ JOIN honeypot h ON g.honeypot = h.id
 WHERE g.id = $1;
 ",
                 guild
-            ).fetch_one(&self.pool).await?;
+            ).fetch_optional(&self.pool).await?.context("honeypot was triggered but not yet set up")?;
 
             if honeypot.enabled.not() {
                 return Ok(());
@@ -56,7 +56,7 @@ WHERE g.id = $1;
                 error!("Failed to ban {}: {:?}", member.user.name, err);
             } else {
                 warn!("{reason}");
-                self.log_discord(&ctx, &reason).await;
+                self.log_discord(&ctx, &reason, member.guild_id).await?;
             }
 
             self.cleanup_last_hour(&ctx, msg).await?;
