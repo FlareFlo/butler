@@ -13,9 +13,10 @@ use serenity::gateway::ActivityData;
 use serenity::model::gateway::Ready;
 use serenity::model::guild::Member;
 use serenity::prelude::*;
-use std::fs;
+use std::{env, fs};
 use std::process::exit;
 use std::sync::LazyLock;
+use sqlx::{Executor, PgPool};
 use tracing::{error, info};
 use tracing_subscriber::FmtSubscriber;
 use uptime_kuma_pusher::UptimePusher;
@@ -78,6 +79,8 @@ async fn main() {
         exit(1);
     })
     .expect("failed to install ctrl+c handler");
+
+    let pool = PgPool::connect(&env::var("DATABASE_URL").expect("missing DATABSE_URL env var")).await.unwrap();
 
     let intents = GatewayIntents::GUILDS
         | GatewayIntents::GUILD_MEMBERS

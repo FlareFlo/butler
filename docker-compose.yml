@@ -5,4 +5,28 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./config.toml:/usr/src/app/config.toml:ro
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://botuser:botpassword@db:5432/botdb
     restart: unless-stopped
+    networks:
+      - internal
+
+  db:
+    image: docker.io/postgres:17
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=botuser
+      - POSTGRES_PASSWORD=botpassword
+      - POSTGRES_DB=botdb
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    expose:
+      - "5432" # exposes to the Docker network, not the host
+
+networks:
+  internal:
+    driver: bridge
