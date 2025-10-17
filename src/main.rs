@@ -3,8 +3,6 @@ mod error;
 mod honeypot;
 mod util;
 
-use crate::account_age::check_account_age;
-use crate::error::process_result;
 use color_eyre::Report;
 use serde::Deserialize;
 use serenity::all::Message;
@@ -13,11 +11,11 @@ use serenity::gateway::ActivityData;
 use serenity::model::gateway::Ready;
 use serenity::model::guild::Member;
 use serenity::prelude::*;
-use std::{env, fs};
+use sqlx::migrate::Migrator;
+use sqlx::{Executor, PgPool};
 use std::process::exit;
 use std::sync::LazyLock;
-use sqlx::{Executor, PgPool};
-use sqlx::migrate::Migrator;
+use std::{env, fs};
 use tracing::{error, info};
 use tracing_subscriber::FmtSubscriber;
 use uptime_kuma_pusher::UptimePusher;
@@ -34,19 +32,22 @@ pub struct Config {
     pub honeypot_safe_roles: Vec<u64>,
 }
 
-struct Handler {}
+struct Handler {
+    pub pool: PgPool,
+    pub config: Config,
+}
 
 #[async_trait]
 impl EventHandler for Handler {
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
-        let res = check_account_age(&ctx, &new_member).await;
-        process_result(&ctx, res).await;
+        let res = self.check_account_age(&ctx, &new_member).await;
+        self.process_result(&ctx, res).await;
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
         handle_dm(ctx.clone(), &msg).await;
-        let res = honeypot::handle_honeypot(ctx.clone(), &msg).await;
-        process_result(&ctx, res).await;
+        let res = self.handle_honeypot(ctx.clone(), &msg).await;
+        self.process_result(&ctx, res).await;
     }
 
     async fn ready(&self, cx: Context, ready: Ready) {
@@ -66,10 +67,6 @@ async fn handle_dm(ctx: Context, msg: &Message) {
     info!("{} said {}", msg.author.name, msg.content);
 }
 
-static CONFIG: LazyLock<Config> = LazyLock::new(|| {
-    toml::from_str::<Config>(&fs::read_to_string("config.toml").expect("missing config.toml")).unwrap()
-});
-
 static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 
 #[tokio::main]
@@ -83,7 +80,13 @@ async fn main() {
     })
     .expect("failed to install ctrl+c handler");
 
-    let pool = PgPool::connect(&env::var("DATABASE_URL").expect("missing DATABSE_URL env var")).await.unwrap();
+    let config =
+        toml::from_str::<Config>(&fs::read_to_string("config.toml").expect("missing config.toml"))
+            .unwrap();
+
+    let pool = PgPool::connect(&env::var("DATABASE_URL").expect("missing DATABSE_URL env var"))
+        .await
+        .unwrap();
 
     MIGRATOR.run(&pool).await.unwrap();
 
@@ -93,10 +96,10 @@ async fn main() {
         | GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MODERATION
         | GatewayIntents::MESSAGE_CONTENT;
-    UptimePusher::new(&CONFIG.uk_url, true).spawn_background();
+    UptimePusher::new(&config.uk_url, true).spawn_background();
 
-    let mut client = Client::builder(&CONFIG.token, intents)
-        .event_handler(Handler {})
+    let mut client = Client::builder(&config.token, intents)
+        .event_handler(Handler { pool, config })
         .await
         .expect("Err creating client");
 
