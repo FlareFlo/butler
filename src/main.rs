@@ -27,7 +27,6 @@ pub struct Config {
     pub token: String,
     pub min_hours: u64,
     pub uk_url: String,
-    pub log_chat: u64,
 }
 
 struct Handler {
