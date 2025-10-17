@@ -8,5 +8,5 @@ CREATE TABLE honeypot (
     id BIGSERIAL PRIMARY KEY,
     channel_ids bigint[] NOT NULL,
     safe_role_ids bigint[] NOT NULL,
-    enabled BOOLEAN DEFAULT true NOT NULL
+    enabled BOOLEAN NOT NULL
 );

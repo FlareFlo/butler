@@ -13,9 +13,8 @@ use serenity::model::gateway::Ready;
 use serenity::model::guild::Member;
 use serenity::prelude::*;
 use sqlx::migrate::Migrator;
-use sqlx::{Executor, PgPool};
+use sqlx::PgPool;
 use std::process::exit;
-use std::sync::LazyLock;
 use std::{env, fs};
 use tracing::{error, info};
 use tracing_subscriber::FmtSubscriber;
@@ -29,8 +28,6 @@ pub struct Config {
     pub min_hours: u64,
     pub uk_url: String,
     pub log_chat: u64,
-    pub honeypot_channels: Vec<u64>,
-    pub honeypot_safe_roles: Vec<u64>,
 }
 
 struct Handler {

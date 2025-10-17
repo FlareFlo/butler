@@ -1,10 +1,11 @@
+use std::ops::Not;
 use crate::db::honeypot::Honeypot;
 use crate::Handler;
-use crate::{ButlerResult, util};
+use crate::ButlerResult;
 use color_eyre::eyre::ContextCompat;
 use serenity::all::GetMessages;
 use serenity::all::{Context, Message};
-use sqlx::{query, query_as};
+use sqlx::query_as;
 use time::{Duration, OffsetDateTime};
 use tracing::{error, warn};
 
@@ -23,6 +24,11 @@ WHERE g.id = $1;
 ",
                 guild
             ).fetch_one(&self.pool).await?;
+
+            if honeypot.enabled.not() {
+                return Ok(());
+            }
+
             if !honeypot.channel_ids
                 .contains(&(msg.channel_id.get() as i64))
             {
