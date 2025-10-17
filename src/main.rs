@@ -1,9 +1,8 @@
-mod account_age;
 mod error;
-mod honeypot;
 mod util;
 mod db;
 mod commands;
+mod handlers;
 
 use crate::commands::Data;
 use crate::commands::logging_channel::logging_channel;
