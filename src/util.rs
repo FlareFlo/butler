@@ -12,12 +12,9 @@ WHERE id = $1
 ", guild_id.get() as i64).fetch_optional(&self.pool).await?.context("logging channel without message")?;
 
         let log_message = CreateMessage::new().content(reason);
-        if let Err(e) = ChannelId::new(query.logging_channel.context("")? as _)
+        ChannelId::new(query.logging_channel.context("")? as _)
             .send_message(&ctx.http, log_message)
-            .await
-        {
-            dbg!(e);
-        };
+            .await?;
         Ok(())
     }
 }
