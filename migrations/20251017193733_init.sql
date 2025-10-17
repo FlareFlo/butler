@@ -1,12 +1,12 @@
 CREATE TABLE guilds (
-    id integer PRIMARY KEY,
+    id bigint PRIMARY KEY,
     honeypot BIGSERIAL,
-    logging_channel integer
+    logging_channel bigint
 );
 
 CREATE TABLE honeypot (
     id BIGSERIAL PRIMARY KEY,
-    channel_ids integer[],
-    safe_role_ids integer[],
-    enabled BOOLEAN DEFAULT true
+    channel_ids bigint[] NOT NULL,
+    safe_role_ids bigint[] NOT NULL,
+    enabled BOOLEAN DEFAULT true NOT NULL
 );

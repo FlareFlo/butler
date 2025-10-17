@@ -2,6 +2,7 @@ mod account_age;
 mod error;
 mod honeypot;
 mod util;
+mod db;
 
 use color_eyre::Report;
 use serde::Deserialize;
@@ -70,25 +71,21 @@ async fn handle_dm(ctx: Context, msg: &Message) {
 static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 
 #[tokio::main]
-async fn main() {
-    tracing::subscriber::set_global_default(FmtSubscriber::builder().finish())
-        .expect("tracing setup failed");
+async fn main() -> ButlerResult<()> {
+    color_eyre::install()?;
+    tracing::subscriber::set_global_default(FmtSubscriber::builder().finish())?;
 
     ctrlc::set_handler(move || {
         error!("Got shutdown signal");
         exit(1);
-    })
-    .expect("failed to install ctrl+c handler");
-
-    let config =
-        toml::from_str::<Config>(&fs::read_to_string("config.toml").expect("missing config.toml"))
-            .unwrap();
+    })?;
 
     let pool = PgPool::connect(&env::var("DATABASE_URL").expect("missing DATABSE_URL env var"))
-        .await
-        .unwrap();
+        .await?;
 
-    MIGRATOR.run(&pool).await.unwrap();
+    MIGRATOR.run(&pool).await?;
+    let config =
+        toml::from_str::<Config>(&fs::read_to_string("config.toml")?)?;
 
     let intents = GatewayIntents::GUILDS
         | GatewayIntents::GUILD_MEMBERS
@@ -103,7 +100,6 @@ async fn main() {
         .await
         .expect("Err creating client");
 
-    if let Err(why) = client.start().await {
-        error!("Client error: {:?}", why);
-    }
+    client.start().await?;
+    Ok(())
 }

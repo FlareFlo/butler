@@ -22,10 +22,14 @@ services:
       - POSTGRES_DB=botdb
     volumes:
       - ./db_data:/var/lib/postgresql/data
+    user: "${UID}:${GID}"
     networks:
       - internal
     expose:
       - "5432" # exposes to the Docker network, not the host
+    ports:
+      - "5432:5432"
+
 
 networks:
   internal:

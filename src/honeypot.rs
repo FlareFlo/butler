@@ -1,25 +1,37 @@
+use crate::db::honeypot::Honeypot;
 use crate::Handler;
 use crate::{ButlerResult, util};
 use color_eyre::eyre::ContextCompat;
 use serenity::all::GetMessages;
 use serenity::all::{Context, Message};
+use sqlx::{query, query_as};
 use time::{Duration, OffsetDateTime};
 use tracing::{error, warn};
 
 impl Handler {
     pub async fn handle_honeypot(&self, ctx: Context, msg: &Message) -> ButlerResult<()> {
-        if let Ok(member) = msg.member(ctx.clone()).await
-            && self
-                .config
-                .honeypot_channels
-                .contains(&msg.channel_id.get())
-        {
+        if let Ok(member) = msg.member(ctx.clone()).await {
+            let guild = member.guild_id.get() as i64;
+
+            let honeypot = query_as!(
+                Honeypot,
+                "
+SELECT h.*
+FROM guilds g
+JOIN honeypot h ON g.honeypot = h.id
+WHERE g.id = $1;
+",
+                guild
+            ).fetch_one(&self.pool).await?;
+            if !honeypot.channel_ids
+                .contains(&(msg.channel_id.get() as i64))
+            {
+                return Ok(());
+            }
             // Ignore whitelisted roles
-            if self
-                .config
-                .honeypot_safe_roles
+            if honeypot.safe_role_ids
                 .iter()
-                .any(|&safe| member.roles.iter().any(|role| safe == role.get()))
+                .any(|&safe| member.roles.iter().any(|role| safe == role.get() as i64))
             {
                 return Ok(());
             }
