@@ -3,7 +3,10 @@ mod error;
 mod honeypot;
 mod util;
 mod db;
+mod commands;
 
+use crate::commands::Data;
+use crate::commands::logging_channel::logging_channel;
 use color_eyre::Report;
 use serde::Deserialize;
 use serenity::all::Message;
@@ -76,7 +79,7 @@ async fn main() -> ButlerResult<()> {
         exit(1);
     })?;
 
-    let pool = PgPool::connect(&env::var("DATABASE_URL").expect("missing DATABSE_URL env var"))
+    let pool = PgPool::connect(&env::var("DATABASE_URL").expect("missing DATABASE_URL env var"))
         .await?;
 
     MIGRATOR.run(&pool).await?;
@@ -89,10 +92,27 @@ async fn main() -> ButlerResult<()> {
         | GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MODERATION
         | GatewayIntents::MESSAGE_CONTENT;
-    UptimePusher::new(&config.uk_url, true).spawn_background();
+    if config.uk_url != "disabled" {
+        UptimePusher::new(&config.uk_url, true).spawn_background();
+    }
+
+    let poise_pool = pool.clone();
+    let framework = poise::Framework::builder()
+        .options(poise::FrameworkOptions {
+            commands: vec![logging_channel()],
+            ..Default::default()
+        })
+        .setup(|ctx, _ready, framework| {
+            Box::pin(async move {
+                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                Ok(Data {pool: poise_pool})
+            })
+        })
+        .build();
 
     let mut client = Client::builder(&config.token, intents)
         .event_handler(Handler { pool, config })
+        .framework(framework)
         .await
         .expect("Err creating client");
 
