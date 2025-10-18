@@ -1,6 +1,6 @@
 use std::ops::Not;
 use crate::db::honeypot::Honeypot;
-use crate::Handler;
+use crate::handlers::Handler;
 use crate::ButlerResult;
 use color_eyre::eyre::ContextCompat;
 use serenity::all::GetMessages;

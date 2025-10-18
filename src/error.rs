@@ -1,6 +1,7 @@
-use crate::{ButlerResult, Handler};
+use crate::ButlerResult;
 use serenity::all::{Context, GuildId};
 use tracing::error;
+use crate::handlers::Handler;
 
 impl Handler {
     pub async fn process_result<T>(&self, ctx: &Context, res: ButlerResult<T>, guild_id: Option<GuildId>) {

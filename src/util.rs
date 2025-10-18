@@ -1,7 +1,8 @@
 use color_eyre::eyre::ContextCompat;
-use crate::{ButlerResult, Handler};
+use crate::ButlerResult;
 use serenity::all::{ChannelId, Context, CreateMessage, GuildId};
 use sqlx::query;
+use crate::handlers::Handler;
 
 impl Handler {
     pub async fn log_discord(&self, ctx: &Context, reason: &str, guild_id: GuildId) -> ButlerResult<()> {
