@@ -1,7 +1,7 @@
 use crate::ButlerResult;
 use crate::commands::Data;
 use itertools::Itertools;
-use serenity::all::{Channel, ChannelId, GuildId, Role, RoleId};
+use serenity::all::{ChannelId, GuildId, RoleId};
 use sqlx::{query, query_as};
 
 #[derive(Debug, sqlx::FromRow)]

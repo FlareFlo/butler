@@ -1,5 +1,5 @@
-use crate::db::action_journal::ModerationAction;
 use crate::ButlerResult;
+use crate::db::action_journal::ModerationAction;
 use crate::handlers::Handler;
 use color_eyre::eyre::ContextCompat;
 use serenity::all::GetMessages;
@@ -58,7 +58,13 @@ impl Handler {
                     member.display_name(),
                     msg.channel_id.name(&ctx).await?
                 );
-                self.database.log_action_to_journal(member.guild_id, member.user.id, ModerationAction::KickedHoneypot).await?;
+                self.database
+                    .log_action_to_journal(
+                        member.guild_id,
+                        member.user.id,
+                        ModerationAction::KickedHoneypot,
+                    )
+                    .await?;
                 self.log_discord(&ctx, &reason, member.guild_id).await?;
             }
 

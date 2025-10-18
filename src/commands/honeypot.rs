@@ -3,7 +3,7 @@ use crate::ensure_admin;
 use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
 use poise::serenity_prelude::Channel;
-use serenity::all::{ChannelId, Role, RoleId};
+use serenity::all::Role;
 
 #[poise::command(slash_command)]
 pub async fn setup_honeypot(
