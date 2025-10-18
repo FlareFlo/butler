@@ -1,18 +1,19 @@
-use std::ops::Not;
-use crate::db::honeypot::Honeypot;
-use crate::handlers::Handler;
 use crate::ButlerResult;
+use crate::handlers::Handler;
 use color_eyre::eyre::ContextCompat;
 use serenity::all::GetMessages;
 use serenity::all::{Context, Message};
-use sqlx::query_as;
+use std::ops::Not;
 use time::{Duration, OffsetDateTime};
 use tracing::{error, warn};
 
 impl Handler {
     pub async fn handle_honeypot(&self, ctx: Context, msg: &Message) -> ButlerResult<()> {
         if let Ok(member) = msg.member(ctx.clone()).await {
-            let honeypot = self.database.get_honeypot_from_guild_id(member.guild_id).await?;
+            let honeypot = self
+                .database
+                .get_honeypot_from_guild_id(member.guild_id)
+                .await?;
 
             let Some(honeypot) = honeypot else {
                 return Ok(());
@@ -22,13 +23,15 @@ impl Handler {
                 return Ok(());
             }
 
-            if !honeypot.channel_ids
+            if !honeypot
+                .channel_ids
                 .contains(&(msg.channel_id.get() as i64))
             {
                 return Ok(());
             }
             // Ignore whitelisted roles
-            if honeypot.safe_role_ids
+            if honeypot
+                .safe_role_ids
                 .iter()
                 .any(|&safe| member.roles.iter().any(|role| safe == role.get() as i64))
             {

@@ -1,10 +1,10 @@
-use crate::db::honeypot::Honeypot;
-use serenity::all::{ActivityData, Context, EventHandler, GuildId, Member, Message, Ready};
-use tracing::info;
-use sqlx::{query_as, PgPool};
-use poise::async_trait;
 use crate::commands::Data;
+use crate::db::honeypot::Honeypot;
 use crate::{ButlerResult, Config};
+use poise::async_trait;
+use serenity::all::{ActivityData, Context, EventHandler, GuildId, Member, Message, Ready};
+use sqlx::query_as;
+use tracing::info;
 
 mod account_age;
 mod honeypot;
@@ -18,7 +18,8 @@ pub struct Handler {
 impl EventHandler for Handler {
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
         let res = self.check_account_age(&ctx, &new_member).await;
-        self.process_result(&ctx, res, Some(new_member.guild_id)).await;
+        self.process_result(&ctx, res, Some(new_member.guild_id))
+            .await;
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
@@ -45,17 +46,22 @@ async fn handle_dm(ctx: Context, msg: &Message) {
 }
 
 impl Data {
-    async fn get_honeypot_from_guild_id(&self, guild_id: GuildId) -> ButlerResult<Option<Honeypot>> {
+    async fn get_honeypot_from_guild_id(
+        &self,
+        guild_id: GuildId,
+    ) -> ButlerResult<Option<Honeypot>> {
         let honeypot = query_as!(
-                Honeypot,
-                "
+            Honeypot,
+            "
 SELECT h.*
 FROM guilds g
 JOIN honeypot h ON g.honeypot = h.id
 WHERE g.id = $1;
 ",
-                guild_id.get() as i64
-            ).fetch_optional(&self.pool).await?;
+            guild_id.get() as i64
+        )
+        .fetch_optional(&self.pool)
+        .await?;
         Ok(honeypot)
     }
 }

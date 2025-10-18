@@ -1,9 +1,9 @@
 use crate::ButlerResult;
+use crate::handlers::Handler;
 use serenity::all::{Context, CreateMessage, Member};
 use std::ops::Add;
 use std::time::Duration;
 use tracing::{info, warn};
-use crate::handlers::Handler;
 
 impl Handler {
     pub async fn check_account_age(&self, ctx: &Context, new_member: &Member) -> ButlerResult<()> {

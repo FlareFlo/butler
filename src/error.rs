@@ -1,10 +1,15 @@
 use crate::ButlerResult;
+use crate::handlers::Handler;
 use serenity::all::{Context, GuildId};
 use tracing::error;
-use crate::handlers::Handler;
 
 impl Handler {
-    pub async fn process_result<T>(&self, ctx: &Context, res: ButlerResult<T>, guild_id: Option<GuildId>) {
+    pub async fn process_result<T>(
+        &self,
+        ctx: &Context,
+        res: ButlerResult<T>,
+        guild_id: Option<GuildId>,
+    ) {
         let Err(error) = res else {
             return;
         };
