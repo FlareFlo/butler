@@ -1,9 +1,5 @@
-use crate::ButlerResult;
 use color_eyre::Report;
-use serenity::all::{ChannelId, GuildId};
-use sqlx::query;
-
-type Context<'a> = poise::Context<'a, Data, Report>;
+pub type PoiseContext<'a> = poise::Context<'a, Data, Report>;
 
 pub mod logging_channel;
 
@@ -21,44 +17,4 @@ macro_rules! ensure_admin {
             return Ok(());
         }
     };
-}
-
-impl Data {
-    pub async fn set_logging_channel(
-        &self,
-        ctx: &Context<'_>,
-        channel: ChannelId,
-        guild: GuildId,
-    ) -> ButlerResult<()> {
-        query!(
-            "
-			UPDATE guilds
-			SET logging_channel = $1
-			WHERE id = $2
- 		",
-            channel.get() as i64,
-            guild.get() as i64
-        )
-        .execute(&ctx.data().pool)
-        .await?;
-        Ok(())
-    }
-
-    pub async fn reset_logging_channel(
-        &self,
-        ctx: &Context<'_>,
-        guild: GuildId,
-    ) -> ButlerResult<()> {
-        query!(
-            "
-			UPDATE guilds
-			SET logging_channel = NULL
-			WHERE id = $1
- 		",
-            guild.get() as i64
-        )
-        .execute(&ctx.data().pool)
-        .await?;
-        Ok(())
-    }
 }

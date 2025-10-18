@@ -1,4 +1,4 @@
-use crate::commands::Context;
+use crate::commands::PoiseContext;
 use crate::ensure_admin;
 use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
@@ -6,7 +6,7 @@ use poise::serenity_prelude::Channel;
 
 #[poise::command(slash_command)]
 pub async fn logging_channel(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Channel to log messages to"] channel: Option<Channel>,
 ) -> Result<(), Report> {
     let Some(guild) = ctx.guild_id() else {
