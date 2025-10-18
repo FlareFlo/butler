@@ -12,18 +12,7 @@ use tracing::{error, warn};
 impl Handler {
     pub async fn handle_honeypot(&self, ctx: Context, msg: &Message) -> ButlerResult<()> {
         if let Ok(member) = msg.member(ctx.clone()).await {
-            let guild = member.guild_id.get() as i64;
-
-            let honeypot = query_as!(
-                Honeypot,
-                "
-SELECT h.*
-FROM guilds g
-JOIN honeypot h ON g.honeypot = h.id
-WHERE g.id = $1;
-",
-                guild
-            ).fetch_optional(&self.database.pool).await?;
+            let honeypot = self.database.get_honeypot_from_guild_id(member.guild_id).await?;
 
             let Some(honeypot) = honeypot else {
                 return Ok(());

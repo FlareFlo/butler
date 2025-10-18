@@ -1,9 +1,10 @@
-use serenity::all::{ActivityData, Context, EventHandler, Member, Message, Ready};
+use crate::db::honeypot::Honeypot;
+use serenity::all::{ActivityData, Context, EventHandler, GuildId, Member, Message, Ready};
 use tracing::info;
-use sqlx::PgPool;
+use sqlx::{query_as, PgPool};
 use poise::async_trait;
 use crate::commands::Data;
-use crate::Config;
+use crate::{ButlerResult, Config};
 
 mod account_age;
 mod honeypot;
@@ -41,4 +42,20 @@ async fn handle_dm(ctx: Context, msg: &Message) {
         return;
     }
     info!("{} said {}", msg.author.name, msg.content);
+}
+
+impl Data {
+    async fn get_honeypot_from_guild_id(&self, guild_id: GuildId) -> ButlerResult<Option<Honeypot>> {
+        let honeypot = query_as!(
+                Honeypot,
+                "
+SELECT h.*
+FROM guilds g
+JOIN honeypot h ON g.honeypot = h.id
+WHERE g.id = $1;
+",
+                guild_id.get() as i64
+            ).fetch_optional(&self.pool).await?;
+        Ok(honeypot)
+    }
 }
