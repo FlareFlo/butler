@@ -6,6 +6,7 @@ use sqlx::query;
 pub mod action_journal;
 pub mod honeypot;
 pub mod logging_channel;
+mod guild;
 
 impl Data {
     pub async fn ensure_guild_exists(&self, guild_id: GuildId) -> ButlerResult<()> {
