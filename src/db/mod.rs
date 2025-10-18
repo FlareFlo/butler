@@ -5,7 +5,8 @@ use serenity::all::GuildId;
 use sqlx::{query, query_as};
 
 pub mod honeypot;
-mod logging_channel;
+pub mod logging_channel;
+pub mod action_journal;
 
 impl Data {
     pub async fn ensure_guild_exists(&self, guild_id: GuildId) -> ButlerResult<()> {
