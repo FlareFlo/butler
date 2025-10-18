@@ -6,6 +6,7 @@ mod serenity_ext;
 mod util;
 
 use crate::commands::Data;
+use crate::commands::config::get_server_config;
 use crate::commands::honeypot::setup_honeypot;
 use crate::commands::logging_channel::logging_channel;
 use color_eyre::Report;
@@ -60,7 +61,7 @@ async fn main() -> ButlerResult<()> {
     let poise_pool = pool.clone();
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![logging_channel(), setup_honeypot()],
+            commands: vec![logging_channel(), setup_honeypot(), get_server_config()],
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {

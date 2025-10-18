@@ -1,7 +1,9 @@
 use crate::Config;
 use crate::commands::Data;
 use poise::async_trait;
-use serenity::all::{ActivityData, Context, EventHandler, Guild, Member, Message, Ready, UnavailableGuild};
+use serenity::all::{
+    ActivityData, Context, EventHandler, Guild, Member, Message, Ready, UnavailableGuild,
+};
 use tracing::info;
 
 mod account_age;

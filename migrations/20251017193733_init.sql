@@ -1,6 +1,6 @@
 CREATE TABLE guilds (
     id bigint PRIMARY KEY,
-    honeypot BIGSERIAL UNIQUE REFERENCES honeypot(id),
+    honeypot BIGSERIAL UNIQUE,
     logging_channel bigint
 );
 

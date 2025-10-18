@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n\t\t\tSELECT logging_channel\n\t\t\tFROM guilds\n\t\t\tWHERE id = $1\n \t\t",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "logging_channel",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "e3488e33ef1c392e8253a8b21b04e542c905279ab485c0b8400d2b8f2f8689b2"
+}

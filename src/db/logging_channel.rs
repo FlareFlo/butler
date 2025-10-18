@@ -45,4 +45,22 @@ impl Data {
         .await?;
         Ok(())
     }
+
+    pub async fn get_logging_channel(
+        &self,
+        ctx: &PoiseContext<'_>,
+        guild: GuildId,
+    ) -> ButlerResult<Option<ChannelId>> {
+        let record = query!(
+            "
+			SELECT logging_channel
+			FROM guilds
+			WHERE id = $1
+ 		",
+            guild.get() as i64
+        )
+        .fetch_optional(&ctx.data().pool)
+        .await?;
+        Ok(record.and_then(|r| r.logging_channel.map(|id| ChannelId::new(id as u64))))
+    }
 }
