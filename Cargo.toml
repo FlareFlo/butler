@@ -18,3 +18,4 @@ time = { version = "0.3.44", features = ["local-offset"] }
 color-eyre = "0.6.5"
 sqlx = { version = "0.8.6", features = ["json", "macros", "migrate", "postgres", "runtime-tokio"], default-features = false}
 poise = { version = "0.6.1", default-features = false, features = ["cache", "chrono"] }
+itertools = "0.14.0"
