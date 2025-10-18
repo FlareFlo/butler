@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n\t\t\tINSERT INTO action_journal (guild, offender_id, action)\n\t\t\tVALUES ($1, $2, $3)\n\t\t",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        {
+          "Custom": {
+            "name": "moderation_action",
+            "kind": {
+              "Enum": [
+                "kicked_honeypot",
+                "kicked_account_age"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "862480f8931777c9107c82fdc1d2abaa703307cc413318e60cfcab063ff11d31"
+}
