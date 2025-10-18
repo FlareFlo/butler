@@ -10,6 +10,8 @@ impl Data {
         channel: ChannelId,
         guild: GuildId,
     ) -> ButlerResult<()> {
+        self.ensure_guild_exists(guild).await?;
+
         query!(
             "
 			UPDATE guilds
@@ -29,6 +31,8 @@ impl Data {
         ctx: &PoiseContext<'_>,
         guild: GuildId,
     ) -> ButlerResult<()> {
+        self.ensure_guild_exists(guild).await?;
+
         query!(
             "
 			UPDATE guilds

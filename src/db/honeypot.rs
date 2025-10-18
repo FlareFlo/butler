@@ -4,7 +4,7 @@ use itertools::Itertools;
 use serenity::all::{Channel, ChannelId, GuildId, Role, RoleId};
 use sqlx::{query, query_as};
 
-#[derive(sqlx::FromRow)]
+#[derive(Debug, sqlx::FromRow)]
 pub struct Honeypot {
     #[allow(unused)]
     pub id: i64,
@@ -40,6 +40,8 @@ impl Data {
         safe_role_ids: impl Iterator<Item = RoleId>,
         enabled: bool,
     ) -> ButlerResult<()> {
+        self.ensure_guild_exists(guild_id).await?;
+
         query!(
             "
             WITH honeypot_row AS (

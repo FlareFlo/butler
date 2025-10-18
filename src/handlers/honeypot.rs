@@ -5,7 +5,7 @@ use serenity::all::GetMessages;
 use serenity::all::{Context, Message};
 use std::ops::Not;
 use time::{Duration, OffsetDateTime};
-use tracing::{error, warn};
+use tracing::{error, info, warn};
 
 impl Handler {
     pub async fn handle_honeypot(&self, ctx: Context, msg: &Message) -> ButlerResult<()> {
@@ -35,23 +35,28 @@ impl Handler {
                 .iter()
                 .any(|&safe| member.roles.iter().any(|role| safe == role.get() as i64))
             {
+                info!(
+                    "{} talked in {} but their role is whitelisted",
+                    member.display_name(),
+                    msg.channel_id.name(&ctx).await?
+                );
                 return Ok(());
             }
 
             let reason = format!(
-                "Kicked {} for sending message into honeypot {}",
-                member.user.name,
-                msg.channel(&ctx)
-                    .await?
-                    .guild()
-                    .context("member not in guild")?
-                    .name
+                "Kicked {} for sending message into {}",
+                member,
+                msg.channel(&ctx).await?
             );
 
             if let Err(err) = member.kick_with_reason(ctx.clone(), &reason).await {
-                error!("Failed to ban {}: {:?}", member.user.name, err);
+                error!("Failed to ban {}: {:?}", member.display_name(), err);
             } else {
-                warn!("{reason}");
+                warn!(
+                    "Kicked {} for sending message into {}",
+                    member.display_name(),
+                    msg.channel_id.name(&ctx).await?
+                );
                 self.log_discord(&ctx, &reason, member.guild_id).await?;
             }
 
