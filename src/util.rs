@@ -10,7 +10,7 @@ impl Handler {
 SELECT logging_channel
 FROM guilds
 WHERE id = $1
-", guild_id.get() as i64).fetch_optional(&self.pool).await?.context("logging channel without message")?;
+", guild_id.get() as i64).fetch_optional(&self.database.pool).await?.context("logging channel without message")?;
 
         let log_message = CreateMessage::new().content(reason);
         ChannelId::new(query.logging_channel.context("")? as _)

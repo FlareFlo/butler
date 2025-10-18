@@ -2,13 +2,14 @@ use serenity::all::{ActivityData, Context, EventHandler, Member, Message, Ready}
 use tracing::info;
 use sqlx::PgPool;
 use poise::async_trait;
+use crate::commands::Data;
 use crate::Config;
 
 mod account_age;
 mod honeypot;
 
 pub struct Handler {
-    pub pool: PgPool,
+    pub database: Data,
     pub config: Config,
 }
 

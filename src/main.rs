@@ -3,6 +3,7 @@ mod util;
 mod db;
 mod commands;
 mod handlers;
+mod serenity_ext;
 
 use crate::commands::Data;
 use crate::commands::logging_channel::logging_channel;
@@ -71,7 +72,7 @@ async fn main() -> ButlerResult<()> {
         .build();
 
     let mut client = Client::builder(&config.token, intents)
-        .event_handler(Handler { pool, config })
+        .event_handler(Handler { database: commands::Data { pool }, config })
         .framework(framework)
         .await
         .expect("Err creating client");

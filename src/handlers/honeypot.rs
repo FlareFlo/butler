@@ -23,7 +23,7 @@ JOIN honeypot h ON g.honeypot = h.id
 WHERE g.id = $1;
 ",
                 guild
-            ).fetch_optional(&self.pool).await?;
+            ).fetch_optional(&self.database.pool).await?;
 
             let Some(honeypot) = honeypot else {
                 return Ok(());
