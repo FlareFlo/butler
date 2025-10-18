@@ -3,7 +3,6 @@ use crate::ensure_admin;
 use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
 use itertools::Itertools;
-use serenity::all::ChannelId;
 
 #[poise::command(slash_command)]
 pub async fn get_server_config(ctx: PoiseContext<'_>) -> Result<(), Report> {
@@ -25,15 +24,11 @@ pub async fn get_server_config(ctx: PoiseContext<'_>) -> Result<(), Report> {
     if let Some(honeypot) = honeypot {
         let mut channels = vec![];
         for channel_id in honeypot.channel_ids {
-            channels.push(
-                ChannelId::new(channel_id as u64)
-                    .to_channel(ctx.http())
-                    .await?,
-            );
+            channels.push(format!("<#{channel_id}>"));
         }
         let mut roles = vec![];
         for safe_role_id in honeypot.safe_role_ids {
-            roles.push(format!("<@&{}>", safe_role_id));
+            roles.push(format!("<@&{safe_role_id}>"));
         }
 
         stats.push_str(&format!(
