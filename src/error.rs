@@ -1,13 +1,25 @@
 use crate::ButlerResult;
-use crate::util::log_discord;
-use serenity::all::Context;
+use crate::handlers::Handler;
+use serenity::all::{Context, GuildId};
 use tracing::error;
 
-pub async fn process_result<T>(ctx: &Context, res: ButlerResult<T>) {
-    let Err(error) = res else {
-        return;
-    };
-    let errstr = error.to_string();
-    error!("{}", errstr);
-    log_discord(ctx, &errstr).await;
+impl Handler {
+    pub async fn process_result<T>(
+        &self,
+        ctx: &Context,
+        res: ButlerResult<T>,
+        guild_id: Option<GuildId>,
+    ) {
+        let Err(error) = res else {
+            return;
+        };
+        let errstr = error.to_string();
+        error!("{}", errstr);
+        if let Some(guild_id) = guild_id {
+            let err = self.log_discord(ctx, &errstr, guild_id).await;
+            if let Err(err) = err {
+                error!("{}", err.to_string());
+            }
+        }
+    }
 }

@@ -1,12 +1,32 @@
-use crate::CONFIG;
-use serenity::all::{ChannelId, Context, CreateMessage};
+use crate::ButlerResult;
+use crate::handlers::Handler;
+use color_eyre::eyre::ContextCompat;
+use serenity::all::{ChannelId, Context, CreateMessage, GuildId};
+use sqlx::query;
 
-pub async fn log_discord(ctx: &Context, reason: &str) {
-    let log_message = CreateMessage::new().content(reason);
-    if let Err(e) = ChannelId::new(CONFIG.log_chat)
-        .send_message(&ctx.http, log_message)
-        .await
-    {
-        dbg!(e);
-    };
+impl Handler {
+    pub async fn log_discord(
+        &self,
+        ctx: &Context,
+        reason: &str,
+        guild_id: GuildId,
+    ) -> ButlerResult<()> {
+        let query = query!(
+            "
+SELECT logging_channel
+FROM guilds
+WHERE id = $1
+",
+            guild_id.get() as i64
+        )
+        .fetch_optional(&self.database.pool)
+        .await?
+        .context("logging channel without message")?;
+
+        let log_message = CreateMessage::new().content(reason);
+        ChannelId::new(query.logging_channel.context("")? as _)
+            .send_message(&ctx.http, log_message)
+            .await?;
+        Ok(())
+    }
 }

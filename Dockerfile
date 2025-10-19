@@ -5,6 +5,7 @@ WORKDIR /usr/src/app
 # Get project code
 COPY Cargo.toml Cargo.lock ./
 COPY ./src ./src
+COPY ./migrations ./migrations
 
 # Build
 RUN cargo build --release

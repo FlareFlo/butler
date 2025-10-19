@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n\t\t\tUPDATE guilds\n\t\t\tSET logging_channel = NULL\n\t\t\tWHERE id = $1\n \t\t",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e7c6135fe3c1bff6385ed8dd8d56ac414f6ce1461f0061a5bbbc28ecd331f9b3"
+}
