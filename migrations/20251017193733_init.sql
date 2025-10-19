@@ -23,3 +23,11 @@ CREATE TABLE action_journal
     action      moderation_action NOT NULL,
     time        timestamptz       NOT NULL DEFAULT now()
 );
+
+
+CREATE TABLE account_age
+(
+    guild_id         BIGINT PRIMARY KEY REFERENCES guilds (id) ON DELETE CASCADE,
+    user_id          BIGINT PRIMARY KEY,
+    account_creation timestamptz NOT NULL
+);
