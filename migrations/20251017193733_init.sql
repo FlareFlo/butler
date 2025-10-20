@@ -1,8 +1,8 @@
 CREATE TABLE guilds
 (
-    id              BIGINT PRIMARY KEY,
-    logging_channel BIGINT,
-    account_minimum_age BIGINT -- Hours
+    id                  BIGINT PRIMARY KEY,
+    logging_channel     BIGINT,
+    account_minimum_age BIGINT -- Seconds
 );
 
 CREATE TABLE honeypot

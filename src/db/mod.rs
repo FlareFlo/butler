@@ -3,6 +3,7 @@ use crate::commands::Data;
 use serenity::all::GuildId;
 use sqlx::query;
 
+mod account_age;
 pub mod action_journal;
 mod guild;
 pub mod honeypot;

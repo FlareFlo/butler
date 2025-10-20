@@ -5,6 +5,7 @@ mod handlers;
 mod serenity_ext;
 mod util;
 
+use crate::commands::account_age::set_minimum_account_age;
 use crate::commands::Data;
 use crate::commands::config::get_server_config;
 use crate::commands::honeypot::setup_honeypot;
@@ -26,7 +27,6 @@ pub type ButlerResult<T> = Result<T, Report>;
 #[derive(Clone, Deserialize)]
 pub struct Config {
     pub token: String,
-    pub min_hours: u64,
     pub uk_url: String,
 }
 
@@ -61,7 +61,7 @@ async fn main() -> ButlerResult<()> {
     let poise_pool = pool.clone();
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![logging_channel(), setup_honeypot(), get_server_config()],
+            commands: vec![logging_channel(), setup_honeypot(), get_server_config(), set_minimum_account_age()],
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {

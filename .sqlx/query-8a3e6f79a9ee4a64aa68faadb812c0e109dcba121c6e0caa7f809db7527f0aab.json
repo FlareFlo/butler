@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n\t\t\tUPDATE guilds\n\t\t\tSET account_minimum_age = $1\n\t\t\tWHERE id = $2\n\t\t",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8a3e6f79a9ee4a64aa68faadb812c0e109dcba121c6e0caa7f809db7527f0aab"
+}

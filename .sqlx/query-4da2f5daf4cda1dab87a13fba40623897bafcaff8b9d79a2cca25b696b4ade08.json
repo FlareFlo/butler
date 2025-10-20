@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n\t\t\tSELECT account_minimum_age\n\t\t\tFROM guilds\n\t\t\tWHERE id = $1\n\t\t",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "account_minimum_age",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "4da2f5daf4cda1dab87a13fba40623897bafcaff8b9d79a2cca25b696b4ade08"
+}
