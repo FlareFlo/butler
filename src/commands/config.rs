@@ -1,15 +1,13 @@
-use color_eyre::eyre::ContextCompat;
 use crate::commands::PoiseContext;
 use color_eyre::Report;
+use color_eyre::eyre::ContextCompat;
 use itertools::Itertools;
 
-#[poise::command(
-    slash_command,
-    required_permissions = "ADMINISTRATOR",
-    guild_only,
-)]
+#[poise::command(slash_command, required_permissions = "ADMINISTRATOR", guild_only)]
 pub async fn get_server_config(ctx: PoiseContext<'_>) -> Result<(), Report> {
-    let guild = ctx.guild_id().context("Command should be guild only but guild_id was unset")?;
+    let guild = ctx
+        .guild_id()
+        .context("Command should be guild only but guild_id was unset")?;
 
     let honeypot = ctx.data().get_honeypot_from_guild_id(guild).await?;
     let logging_channel = ctx.data().get_logging_channel(&ctx, guild).await?;

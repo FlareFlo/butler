@@ -1,7 +1,7 @@
 use crate::ButlerResult;
 use crate::db::action_journal::ModerationAction;
 use crate::handlers::Handler;
-use color_eyre::eyre::ContextCompat;
+use color_eyre::eyre::{Context as EyreContext, ContextCompat};
 use serenity::all::GetMessages;
 use serenity::all::{Context, Message};
 use std::ops::Not;
@@ -50,23 +50,23 @@ impl Handler {
                 msg.channel(&ctx).await?
             );
 
-            if let Err(err) = member.kick_with_reason(ctx.clone(), &reason).await {
-                error!("Failed to ban {}: {:?}", member.display_name(), err);
-            } else {
-                warn!(
-                    "Kicked {} for sending message into {}",
-                    member.display_name(),
-                    msg.channel_id.name(&ctx).await?
-                );
-                self.database
-                    .log_action_to_journal(
-                        member.guild_id,
-                        member.user.id,
-                        ModerationAction::KickedHoneypot,
-                    )
-                    .await?;
-                self.log_discord(&ctx, &reason, member.guild_id).await?;
-            }
+            member
+                .kick_with_reason(ctx.clone(), &reason)
+                .await
+                .with_context(|| format!("Failed to ban {}", member.display_name()))?;
+            warn!(
+                "Kicked {} for sending message into {}",
+                member.display_name(),
+                msg.channel_id.name(&ctx).await?
+            );
+            self.database
+                .log_action_to_journal(
+                    member.guild_id,
+                    member.user.id,
+                    ModerationAction::KickedHoneypot,
+                )
+                .await?;
+            self.log_discord(&ctx, &reason, member.guild_id).await?;
 
             self.cleanup_last_hour(&ctx, msg).await?;
         }
