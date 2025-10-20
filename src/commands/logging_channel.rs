@@ -1,6 +1,5 @@
 use crate::commands::PoiseContext;
 use color_eyre::Report;
-use color_eyre::eyre::ContextCompat;
 use poise::serenity_prelude::Channel;
 
 #[poise::command(
@@ -16,10 +15,6 @@ pub async fn logging_channel(
             .await?;
         return Ok(());
     };
-    let author = ctx
-        .author_member()
-        .await
-        .context("Expect user to have roles set in guild")?;
 
     if let Some(channel) = channel {
         ctx.data()

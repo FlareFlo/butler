@@ -1,6 +1,5 @@
 use crate::commands::PoiseContext;
 use color_eyre::Report;
-use color_eyre::eyre::ContextCompat;
 use poise::serenity_prelude::Channel;
 use serenity::all::Role;
 
@@ -19,10 +18,6 @@ pub async fn setup_honeypot(
             .await?;
         return Ok(());
     };
-    let author = ctx
-        .author_member()
-        .await
-        .context("Expect user to have roles set in guild")?;
 
     ctx.data()
         .set_honeypot_for_guild(
