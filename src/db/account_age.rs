@@ -9,6 +9,8 @@ impl Data {
         &self,
         guild_id: GuildId,
     ) -> ButlerResult<Option<Duration>> {
+        self.ensure_guild_exists(guild_id).await?;
+
         let record = query!(
             "
 			SELECT account_minimum_age
@@ -29,6 +31,8 @@ impl Data {
         guild_id: GuildId,
         seconds: Option<Duration>,
     ) -> ButlerResult<()> {
+        self.ensure_guild_exists(guild_id).await?;
+
         let record = query!(
             "
 			UPDATE guilds
