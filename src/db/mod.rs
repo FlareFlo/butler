@@ -13,8 +13,12 @@ impl Data {
         query!(
             "
             INSERT INTO guilds (id)
-            VALUES ($1)
-            ON CONFLICT (id) DO NOTHING
+            SELECT $1
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM guilds
+                WHERE id = $1
+            )
             ",
             guild_id.get() as i64
         )

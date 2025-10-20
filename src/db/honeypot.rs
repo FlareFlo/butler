@@ -7,7 +7,7 @@ use sqlx::{query, query_as};
 #[derive(Debug, sqlx::FromRow)]
 pub struct Honeypot {
     #[allow(unused)]
-    pub id: i64,
+    pub guild_id: i64,
     pub channel_ids: Vec<i64>,
     pub safe_role_ids: Vec<i64>,
     pub enabled: bool,
@@ -21,10 +21,9 @@ impl Data {
         let honeypot = query_as!(
             Honeypot,
             "
-            SELECT h.*
-            FROM guilds g
-            JOIN honeypot h ON g.honeypot = h.id
-            WHERE g.id = $1;
+            SELECT *
+            FROM honeypot
+            WHERE guild_id = $1;
             ",
             guild_id.get() as i64
         )
@@ -44,14 +43,8 @@ impl Data {
 
         query!(
             "
-            WITH honeypot_row AS (
-                INSERT INTO honeypot (channel_ids, safe_role_ids, enabled)
-                VALUES ($2, $3, $4)
-                RETURNING id
-            )
-            UPDATE guilds
-            SET honeypot = (SELECT id FROM honeypot_row)
-            WHERE id = $1
+                INSERT INTO honeypot (guild_id, channel_ids, safe_role_ids, enabled)
+                VALUES ($1, $2, $3, $4)
             ",
             guild_id.get() as i64,
             &channel_ids.map(|e| e.get() as i64).collect_vec(),
