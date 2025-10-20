@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO guilds (id)\n            SELECT $1\n            WHERE NOT EXISTS (\n                SELECT 1\n                FROM guilds\n                WHERE id = $1\n            )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f267b244d49c467eee336e9dfe1c44364ad3d1a48a5acf6b8d822313ec20c7aa"
+}

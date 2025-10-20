@@ -45,6 +45,9 @@ impl Data {
             "
                 INSERT INTO honeypot (guild_id, channel_ids, safe_role_ids, enabled)
                 VALUES ($1, $2, $3, $4)
+                ON CONFLICT (guild_id)
+                DO UPDATE
+                SET channel_ids = $2, safe_role_ids = $3, enabled = $4;
             ",
             guild_id.get() as i64,
             &channel_ids.map(|e| e.get() as i64).collect_vec(),

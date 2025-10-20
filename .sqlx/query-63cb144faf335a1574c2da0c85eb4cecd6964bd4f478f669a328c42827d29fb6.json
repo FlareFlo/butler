@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT h.*\n            FROM guilds g\n            JOIN honeypot h ON g.honeypot = h.id\n            WHERE g.id = $1;\n            ",
+  "query": "\n            SELECT *\n            FROM honeypot\n            WHERE guild_id = $1;\n            ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "id",
+        "name": "guild_id",
         "type_info": "Int8"
       },
       {
@@ -36,5 +36,5 @@
       false
     ]
   },
-  "hash": "da09dc799df07d9908ba8a6b51ad54c81b2c251abdf366861874bd9134da109b"
+  "hash": "63cb144faf335a1574c2da0c85eb4cecd6964bd4f478f669a328c42827d29fb6"
 }

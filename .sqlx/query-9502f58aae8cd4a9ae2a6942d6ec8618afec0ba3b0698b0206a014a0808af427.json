@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO honeypot (guild_id, channel_ids, safe_role_ids, enabled)\n                VALUES ($1, $2, $3, $4)\n                ON CONFLICT (guild_id)\n                DO UPDATE\n                SET channel_ids = $2, safe_role_ids = $3, enabled = $4;\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array",
+        "Int8Array",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9502f58aae8cd4a9ae2a6942d6ec8618afec0ba3b0698b0206a014a0808af427"
+}
