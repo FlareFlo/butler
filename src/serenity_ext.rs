@@ -8,7 +8,7 @@ pub trait SerenityExt {
 impl SerenityExt for Member {
     fn has_admin<U, E>(&self, ctx: &Context<U, E>) -> bool {
         if let Some(roles) = self.roles(ctx) {
-            roles.iter().any(|r| r.permissions.administrator())
+            roles.iter().any(|r| r.permissions.MODERATE_MEMBERS())
         } else {
             false
         }

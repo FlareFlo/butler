@@ -4,7 +4,7 @@ use color_eyre::eyre::ContextCompat;
 use poise::serenity_prelude::Channel;
 use std::time::Duration;
 
-#[poise::command(slash_command, required_permissions = "ADMINISTRATOR", guild_only)]
+#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
 pub async fn set_minimum_account_age(
     ctx: PoiseContext<'_>,
     #[description = "Minimum account age in days"] minimum_account_age_days: Option<u64>,

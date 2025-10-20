@@ -5,7 +5,7 @@ use poise::serenity_prelude::Channel;
 use serenity::all::Role;
 use std::iter::once;
 
-#[poise::command(slash_command, required_permissions = "ADMINISTRATOR", guild_only)]
+#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
 pub async fn setup_honeypot(
     ctx: PoiseContext<'_>,
     #[description = "Honeypot channel"] honeypot: Channel,

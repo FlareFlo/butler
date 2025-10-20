@@ -3,7 +3,7 @@ use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
 use itertools::Itertools;
 
-#[poise::command(slash_command, required_permissions = "ADMINISTRATOR", guild_only)]
+#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
 pub async fn get_server_config(ctx: PoiseContext<'_>) -> Result<(), Report> {
     let guild = ctx
         .guild_id()
