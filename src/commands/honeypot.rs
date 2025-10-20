@@ -1,3 +1,4 @@
+use std::iter::once;
 use crate::commands::PoiseContext;
 use color_eyre::Report;
 use poise::serenity_prelude::Channel;
@@ -9,8 +10,8 @@ use serenity::all::Role;
 )]
 pub async fn setup_honeypot(
     ctx: PoiseContext<'_>,
-    #[description = "Honeypot channels"] honeypots: Vec<Channel>,
-    #[description = "Safe roles"] safe_roles: Vec<Role>,
+    #[description = "Honeypot channel"] honeypot: Channel,
+    #[description = "Safe role"] safe_role: Role,
     #[description = "Enabled"] enabled: bool,
 ) -> Result<(), Report> {
     let Some(guild) = ctx.guild_id() else {
@@ -22,8 +23,8 @@ pub async fn setup_honeypot(
     ctx.data()
         .set_honeypot_for_guild(
             guild,
-            honeypots.iter().map(|e| e.id()),
-            safe_roles.iter().map(|e| e.id),
+            once(honeypot.id()),
+            once(safe_role.id),
             enabled,
         )
         .await?;
