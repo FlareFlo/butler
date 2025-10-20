@@ -1,7 +1,8 @@
 CREATE TABLE guilds
 (
     id              BIGINT PRIMARY KEY,
-    logging_channel BIGINT
+    logging_channel BIGINT,
+    account_minimum_age BIGINT -- Hours
 );
 
 CREATE TABLE honeypot
@@ -21,13 +22,4 @@ CREATE TABLE action_journal
     offender_id BIGINT            NOT NULL,
     action      moderation_action NOT NULL,
     time        timestamptz       NOT NULL DEFAULT now()
-);
-
-
-CREATE TABLE account_age
-(
-    guild_id         BIGINT UNIQUE REFERENCES guilds (id) ON DELETE CASCADE,
-    user_id          BIGINT UNIQUE,
-    account_creation timestamptz NOT NULL,
-    PRIMARY KEY (guild_id, user_id)
 );

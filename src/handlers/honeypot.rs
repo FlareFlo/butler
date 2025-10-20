@@ -6,7 +6,7 @@ use serenity::all::GetMessages;
 use serenity::all::{Context, Message};
 use std::ops::Not;
 use time::{Duration, OffsetDateTime};
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 
 impl Handler {
     pub async fn handle_honeypot(&self, ctx: Context, msg: &Message) -> ButlerResult<()> {
