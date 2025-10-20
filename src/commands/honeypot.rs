@@ -11,8 +11,8 @@ use serenity::all::Role;
 pub async fn setup_honeypot(
     ctx: PoiseContext<'_>,
     #[description = "Honeypot channel"] honeypot: Channel,
-    #[description = "Safe role"] safe_role: Role,
-    #[description = "Enabled"] enabled: bool,
+    #[description = "Safe role that will not be acted upon when typing in the honeypot"] safe_role: Role,
+    #[description = "Enables the honeypot, defaults to armed state"] enabled: Option<bool>,
 ) -> Result<(), Report> {
     let Some(guild) = ctx.guild_id() else {
         ctx.reply("This command can only be used in guilds or channels.")
@@ -25,7 +25,7 @@ pub async fn setup_honeypot(
             guild,
             once(honeypot.id()),
             once(safe_role.id),
-            enabled,
+            enabled.unwrap_or(true),
         )
         .await?;
 
