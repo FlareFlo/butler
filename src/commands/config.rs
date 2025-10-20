@@ -1,22 +1,17 @@
 use crate::commands::PoiseContext;
-use crate::ensure_admin;
 use color_eyre::Report;
-use color_eyre::eyre::ContextCompat;
 use itertools::Itertools;
 
-#[poise::command(slash_command)]
+#[poise::command(
+    slash_command,
+    required_permissions = "ADMINISTRATOR",
+)]
 pub async fn get_server_config(ctx: PoiseContext<'_>) -> Result<(), Report> {
     let Some(guild) = ctx.guild_id() else {
         ctx.reply("This command can only be used in guilds or channels.")
             .await?;
         return Ok(());
     };
-    let author = ctx
-        .author_member()
-        .await
-        .context("Expect user to have roles set in guild")?;
-    ensure_admin!(author, &ctx);
-
     let honeypot = ctx.data().get_honeypot_from_guild_id(guild).await?;
     let logging_channel = ctx.data().get_logging_channel(&ctx, guild).await?;
 

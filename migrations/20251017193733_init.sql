@@ -10,7 +10,7 @@ CREATE TABLE honeypot
     id            BIGSERIAL PRIMARY KEY REFERENCES guilds (honeypot) ON DELETE CASCADE,
     channel_ids   BIGINT[] NOT NULL,
     safe_role_ids BIGINT[] NOT NULL,
-    enabled       BOOLEAN  NOT NULL
+    enabled       BOOLEAN NOT NULL
 );
 
 CREATE TYPE moderation_action AS ENUM ('kicked_honeypot', 'kicked_account_age');
@@ -27,7 +27,8 @@ CREATE TABLE action_journal
 
 CREATE TABLE account_age
 (
-    guild_id         BIGINT PRIMARY KEY REFERENCES guilds (id) ON DELETE CASCADE,
-    user_id          BIGINT PRIMARY KEY,
-    account_creation timestamptz NOT NULL
+    guild_id         BIGINT UNIQUE REFERENCES guilds (id) ON DELETE CASCADE,
+    user_id          BIGINT UNIQUE,
+    account_creation timestamptz NOT NULL,
+    PRIMARY KEY (guild_id, user_id)
 );

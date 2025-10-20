@@ -1,10 +1,12 @@
 use crate::commands::PoiseContext;
-use crate::ensure_admin;
 use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
 use poise::serenity_prelude::Channel;
 
-#[poise::command(slash_command)]
+#[poise::command(
+    slash_command,
+    required_permissions = "ADMINISTRATOR",
+)]
 pub async fn logging_channel(
     ctx: PoiseContext<'_>,
     #[description = "Channel to log messages to"] channel: Option<Channel>,
@@ -18,7 +20,6 @@ pub async fn logging_channel(
         .author_member()
         .await
         .context("Expect user to have roles set in guild")?;
-    ensure_admin!(author, &ctx);
 
     if let Some(channel) = channel {
         ctx.data()
