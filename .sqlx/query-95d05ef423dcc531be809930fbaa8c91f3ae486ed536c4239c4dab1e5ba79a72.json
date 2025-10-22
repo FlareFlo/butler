@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE honeypot\n                SET safe_role_ids = array_remove(safe_role_ids, $2)\n                WHERE guild_id = $1;\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "95d05ef423dcc531be809930fbaa8c91f3ae486ed536c4239c4dab1e5ba79a72"
+}

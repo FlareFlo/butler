@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE honeypot\n                SET safe_role_ids = array_append(safe_role_ids, $2)\n                WHERE guild_id = $1\n                AND NOT ($2 = ANY(safe_role_ids));\n\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b884d3a460163998301d4ed57ad6cc8ad16f9d338c564955bb4a9d063a74c63a"
+}

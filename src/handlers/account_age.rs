@@ -3,7 +3,6 @@ use crate::db::action_journal::ModerationAction;
 use crate::handlers::Handler;
 use serenity::all::{Context, CreateMessage, Member};
 use std::ops::Add;
-use std::time::Duration;
 use tracing::{info, warn};
 
 impl Handler {

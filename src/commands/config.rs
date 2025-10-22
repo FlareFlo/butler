@@ -1,7 +1,7 @@
 use crate::commands::PoiseContext;
+use crate::commands::util::{channels_to_string, roles_to_string};
 use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
-use itertools::Itertools;
 
 #[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
 pub async fn get_server_config(ctx: PoiseContext<'_>) -> Result<(), Report> {
@@ -12,21 +12,17 @@ pub async fn get_server_config(ctx: PoiseContext<'_>) -> Result<(), Report> {
     let honeypot = ctx.data().get_honeypot_from_guild_id(guild).await?;
     let logging_channel = ctx.data().get_logging_channel(&ctx, guild).await?;
 
+    if honeypot.is_none() && logging_channel.is_none() {
+        ctx.reply("Nothing is configured yet.").await?;
+        return Ok(());
+    }
+
     let mut stats = "".to_string();
     if let Some(honeypot) = honeypot {
-        let mut channels = vec![];
-        for channel_id in honeypot.channel_ids {
-            channels.push(format!("<#{channel_id}>"));
-        }
-        let mut roles = vec![];
-        for safe_role_id in honeypot.safe_role_ids {
-            roles.push(format!("<@&{safe_role_id}>"));
-        }
-
         stats.push_str(&format!(
             "Honeypots: {}\nSafe roles: {}\nArmed: {}\n",
-            channels.into_iter().join(""),
-            roles.into_iter().join(""),
+            channels_to_string(honeypot.channel_ids.iter()),
+            roles_to_string(honeypot.safe_role_ids.iter()),
             honeypot.enabled
         ));
     }

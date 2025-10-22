@@ -3,9 +3,10 @@ pub type PoiseContext<'a> = poise::Context<'a, Data, Report>;
 
 pub mod account_age;
 pub mod config;
+pub mod help;
 pub mod honeypot;
 pub mod logging_channel;
-pub mod help;
+mod util;
 
 pub struct Data {
     pub(crate) pool: sqlx::PgPool,

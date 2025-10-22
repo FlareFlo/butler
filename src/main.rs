@@ -5,11 +5,11 @@ mod handlers;
 mod serenity_ext;
 mod util;
 
-use crate::commands::help::help;
 use crate::commands::Data;
 use crate::commands::account_age::set_minimum_account_age;
 use crate::commands::config::get_server_config;
-use crate::commands::honeypot::setup_honeypot;
+use crate::commands::help::help;
+use crate::commands::honeypot::{add_safe_role, remove_safe_role, setup_honeypot};
 use crate::commands::logging_channel::logging_channel;
 use color_eyre::Report;
 use handlers::Handler;
@@ -68,6 +68,8 @@ async fn main() -> ButlerResult<()> {
                 setup_honeypot(),
                 get_server_config(),
                 set_minimum_account_age(),
+                add_safe_role(),
+                remove_safe_role(),
             ],
             ..Default::default()
         })
