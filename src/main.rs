@@ -9,7 +9,7 @@ use crate::commands::Data;
 use crate::commands::account_age::set_minimum_account_age;
 use crate::commands::config::get_server_config;
 use crate::commands::help::help;
-use crate::commands::honeypot::{add_safe_role, remove_safe_role, setup_honeypot};
+use crate::commands::honeypot::{add_honeypot_channel, add_safe_role, remove_honeypot_channel, remove_safe_role, setup_honeypot};
 use crate::commands::logging_channel::logging_channel;
 use color_eyre::Report;
 use handlers::Handler;
@@ -70,6 +70,8 @@ async fn main() -> ButlerResult<()> {
                 set_minimum_account_age(),
                 add_safe_role(),
                 remove_safe_role(),
+                add_honeypot_channel(),
+                remove_honeypot_channel(),
             ],
             ..Default::default()
         })

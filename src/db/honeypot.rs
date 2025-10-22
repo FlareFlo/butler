@@ -115,4 +115,61 @@ impl Data {
 
         Ok(Some(honeypot))
     }
+
+
+    // Returns honeypot on success, fails if it did not exist
+    pub async fn add_honeypot_channel(
+        &self,
+        guild_id: GuildId,
+        channel_id: ChannelId,
+    ) -> ButlerResult<Option<Honeypot>> {
+        let Some(mut honeypot) = self.get_honeypot_from_guild_id(guild_id).await? else {
+            return Ok(None);
+        };
+
+        query!(
+            "
+                UPDATE honeypot
+                SET channel_ids = array_append(channel_ids, $2)
+                WHERE guild_id = $1
+                AND NOT ($2 = ANY(channel_ids));
+
+            ",
+            guild_id.get() as i64,
+            channel_id.get() as i64,
+        )
+            .execute(&self.pool)
+            .await?;
+
+        honeypot.channel_ids.push(channel_id.get() as i64);
+
+        Ok(Some(honeypot))
+    }
+
+    // Returns honeypot on success, fails if it did not exist
+    pub async fn remove_honeypot_channel(
+        &self,
+        guild_id: GuildId,
+        channel_id: ChannelId,
+    ) -> ButlerResult<Option<Honeypot>> {
+        let Some(mut honeypot) = self.get_honeypot_from_guild_id(guild_id).await? else {
+            return Ok(None);
+        };
+
+        query!(
+            "
+                UPDATE honeypot
+                SET channel_ids = array_remove(channel_ids, $2)
+                WHERE guild_id = $1;
+            ",
+            guild_id.get() as i64,
+            channel_id.get() as i64,
+        )
+            .execute(&self.pool)
+            .await?;
+
+        honeypot.channel_ids.retain(|id| *id != channel_id.get() as i64);
+
+        Ok(Some(honeypot))
+    }
 }
