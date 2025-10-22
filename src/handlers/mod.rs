@@ -1,5 +1,5 @@
-use crate::Config;
 use crate::commands::Data;
+use crate::{Config, process_result};
 use poise::async_trait;
 use serenity::all::{
     ActivityData, Context, EventHandler, Guild, Member, Message, Ready, UnavailableGuild,
@@ -18,14 +18,14 @@ pub struct Handler {
 impl EventHandler for Handler {
     async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
         let res = self.check_account_age(&ctx, &new_member).await;
-        self.process_result(&ctx, res, Some(new_member.guild_id))
-            .await;
+
+        process_result!(&self, &ctx, res, Some(new_member.guild_id));
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
         handle_dm(ctx.clone(), &msg).await;
         let res = self.handle_honeypot(ctx.clone(), &msg).await;
-        self.process_result(&ctx, res, msg.guild_id).await;
+        process_result!(&self, &ctx, res, msg.guild_id);
     }
 
     async fn ready(&self, cx: Context, ready: Ready) {
@@ -37,14 +37,14 @@ impl EventHandler for Handler {
         // This means the bot has been removed from the server
         if incomplete.unavailable == false {
             let res = self.database.delete_guild(incomplete.id).await;
-            self.process_result(&ctx, res, None).await;
+            process_result!(&self, &ctx, res, None);
         }
     }
 
     async fn guild_create(&self, ctx: Context, guild: Guild, is_new: Option<bool>) {
         if is_new == Some(true) {
             let res = self.database.ensure_guild_exists(guild.id).await;
-            self.process_result(&ctx, res, None).await;
+            process_result!(&self, &ctx, res, None);
         }
     }
 }

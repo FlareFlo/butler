@@ -45,11 +45,7 @@ pub async fn add_safe_role(
     if let Some(success) = honeypot {
         ctx.reply(format!(
             "Safe roles are now {}",
-            roles_to_string(
-                success
-                    .safe_role_ids
-                    .iter()
-            )
+            roles_to_string(success.safe_role_ids.iter())
         ))
         .await?;
     } else {
@@ -74,11 +70,7 @@ pub async fn remove_safe_role(
     if let Some(success) = honeypot {
         ctx.reply(format!(
             "Safe roles are now {}",
-            roles_to_string(
-                success
-                    .safe_role_ids
-                    .iter()
-            )
+            roles_to_string(success.safe_role_ids.iter())
         ))
         .await?;
     } else {
@@ -88,7 +80,6 @@ pub async fn remove_safe_role(
 
     Ok(())
 }
-
 
 #[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
 pub async fn add_honeypot_channel(
@@ -104,16 +95,12 @@ pub async fn add_honeypot_channel(
     if let Some(success) = honeypot {
         ctx.reply(format!(
             "Honeypot channels are now {}",
-            channels_to_string(
-                success
-                    .channel_ids
-                    .iter()
-            )
+            channels_to_string(success.channel_ids.iter())
         ))
-           .await?;
+        .await?;
     } else {
         ctx.reply("Failed to add channel. Is the honeypot set up already?")
-           .await?;
+            .await?;
     }
 
     Ok(())
@@ -128,21 +115,20 @@ pub async fn remove_honeypot_channel(
         .guild_id()
         .context("Command should be guild only but guild_id was unset")?;
 
-    let honeypot = ctx.data().remove_honeypot_channel(guild, channel.id()).await?;
+    let honeypot = ctx
+        .data()
+        .remove_honeypot_channel(guild, channel.id())
+        .await?;
 
     if let Some(success) = honeypot {
         ctx.reply(format!(
             "Honeypot channels are now {}",
-            channels_to_string(
-                success
-                    .channel_ids
-                    .iter()
-            )
+            channels_to_string(success.channel_ids.iter())
         ))
-           .await?;
+        .await?;
     } else {
         ctx.reply("Failed to remove channel. Is the honeypot set up already?")
-           .await?;
+            .await?;
     }
 
     Ok(())

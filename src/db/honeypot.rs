@@ -111,11 +111,12 @@ impl Data {
         .execute(&self.pool)
         .await?;
 
-        honeypot.safe_role_ids.retain(|id| *id != safe_role_id.get() as i64);
+        honeypot
+            .safe_role_ids
+            .retain(|id| *id != safe_role_id.get() as i64);
 
         Ok(Some(honeypot))
     }
-
 
     // Returns honeypot on success, fails if it did not exist
     pub async fn add_honeypot_channel(
@@ -138,8 +139,8 @@ impl Data {
             guild_id.get() as i64,
             channel_id.get() as i64,
         )
-            .execute(&self.pool)
-            .await?;
+        .execute(&self.pool)
+        .await?;
 
         honeypot.channel_ids.push(channel_id.get() as i64);
 
@@ -165,10 +166,12 @@ impl Data {
             guild_id.get() as i64,
             channel_id.get() as i64,
         )
-            .execute(&self.pool)
-            .await?;
+        .execute(&self.pool)
+        .await?;
 
-        honeypot.channel_ids.retain(|id| *id != channel_id.get() as i64);
+        honeypot
+            .channel_ids
+            .retain(|id| *id != channel_id.get() as i64);
 
         Ok(Some(honeypot))
     }
