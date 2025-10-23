@@ -27,8 +27,6 @@ services:
       - internal
     expose:
       - "5432" # exposes to the Docker network, not the host
-    ports:
-      - "5432:5432"
 
 
 networks:
