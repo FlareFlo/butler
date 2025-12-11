@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE honeypot\n                SET channel_ids = array_remove(channel_ids, $2)\n                WHERE guild_id = $1;\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c3271ee12af4ac165535350b0dd917e48a716234d7e9468c64e61b3670bc7afc"
+}

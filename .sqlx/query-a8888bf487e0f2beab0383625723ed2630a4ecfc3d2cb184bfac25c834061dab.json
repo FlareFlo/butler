@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE honeypot\n                SET channel_ids = array_append(channel_ids, $2)\n                WHERE guild_id = $1\n                AND NOT ($2 = ANY(channel_ids));\n\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a8888bf487e0f2beab0383625723ed2630a4ecfc3d2cb184bfac25c834061dab"
+}
