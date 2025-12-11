@@ -6,6 +6,7 @@ WORKDIR /usr/src/app
 COPY Cargo.toml Cargo.lock ./
 COPY ./src ./src
 COPY ./migrations ./migrations
+COPY ./sqlx ./sqlx
 
 # Build
 RUN cargo build --release
