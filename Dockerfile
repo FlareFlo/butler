@@ -7,6 +7,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY ./src ./src
 COPY ./migrations ./migrations
 COPY ./sqlx ./sqlx
+ARG SQLX_OFFLINE=true
 
 # Build
 RUN cargo build --release
