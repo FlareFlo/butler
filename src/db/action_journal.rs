@@ -24,16 +24,18 @@ impl Data {
         guild: GuildId,
         offender: UserId,
         action: ModerationAction,
+        moderator: Option<UserId>,
     ) -> ButlerResult<()> {
         // Timestamp created by DB
         query!(
             "
-			INSERT INTO action_journal (guild, offender_id, action)
-			VALUES ($1, $2, $3)
+			INSERT INTO action_journal (guild, offender_id, action, moderator_id)
+			VALUES ($1, $2, $3, $4)
 		",
             guild.get() as i64,
             offender.get() as i64,
             action as ModerationAction,
+            moderator.map(|x|x.get() as i64),
         )
         .execute(&self.pool)
         .await?;

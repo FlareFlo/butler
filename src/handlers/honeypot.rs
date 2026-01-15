@@ -64,6 +64,7 @@ impl Handler {
                     member.guild_id,
                     member.user.id,
                     ModerationAction::KickedHoneypot,
+                    None,
                 )
                 .await?;
             self.log_discord(&ctx, &reason, member.guild_id).await?;

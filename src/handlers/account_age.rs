@@ -57,6 +57,7 @@ impl Handler {
                 new_member.guild_id,
                 user.id,
                 ModerationAction::KickedAccountAge,
+                None,
             )
             .await?;
 
