@@ -9,6 +9,7 @@ use time::UtcDateTime;
 pub enum ModerationAction {
     KickedHoneypot,
     KickedAccountAge,
+    CommandBanned,
 }
 
 pub struct ActionJournal {

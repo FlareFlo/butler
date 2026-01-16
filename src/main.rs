@@ -24,6 +24,7 @@ use std::{env, fs};
 use tracing::error;
 use tracing_subscriber::FmtSubscriber;
 use uptime_kuma_pusher::UptimePusher;
+use crate::commands::ban::ban;
 
 pub type ButlerResult<T> = Result<T, Report>;
 
@@ -74,6 +75,7 @@ async fn main() -> ButlerResult<()> {
                 remove_safe_role(),
                 add_honeypot_channel(),
                 remove_honeypot_channel(),
+                ban(),
             ],
             ..Default::default()
         })

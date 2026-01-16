@@ -7,6 +7,7 @@ pub mod help;
 pub mod honeypot;
 pub mod logging_channel;
 mod util;
+pub mod ban;
 
 pub struct Data {
     pub(crate) pool: sqlx::PgPool,
