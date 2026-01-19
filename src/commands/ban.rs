@@ -1,8 +1,10 @@
 use color_eyre::eyre::ContextCompat;
 use color_eyre::Report;
 use serenity::all::{Channel, Member, User, UserId};
+use tracing::error;
 use crate::commands::PoiseContext;
 use crate::db::action_journal::ModerationAction;
+use crate::error::ButlerErrorExt;
 use crate::serenity_ext::SerenityExt;
 
 #[poise::command(slash_command, required_permissions = "BAN_MEMBERS", guild_only)]
@@ -40,9 +42,15 @@ pub async fn ban(
 		who.ban(ctx.http(), dmd).await?;
 	}
 
-	ctx.data().log_action_to_journal(guild, who.user.id, ModerationAction::CommandBanned, Some(ctx.author().id)).await?;
+	let log = ctx.data().log_action_to_journal(guild, who.user.id, ModerationAction::CommandBanned, Some(ctx.author().id)).await;
 
-	ctx.reply("Banned {who}").await?;
+	if log.is_err() {
+		ctx.reply("Banned {who} but failed to log this action").await?;
+		log.log_err();
+		log?;
+	} else {
+		ctx.reply("Banned {who}").await?;
+	}
 
 	Ok(())
 }

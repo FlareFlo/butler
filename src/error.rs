@@ -1,3 +1,6 @@
+use std::fmt::{Debug, Display};
+use tracing::error;
+
 #[macro_export]
 macro_rules! process_result {
     ($self:expr, $ctx:expr, $res:expr, $guild_id:expr) => {
@@ -13,4 +16,16 @@ macro_rules! process_result {
             }
         }
     };
+}
+
+pub trait ButlerErrorExt {
+    fn log_err(&self);
+}
+
+impl<T, E: Display> ButlerErrorExt for Result<T, E> {
+    fn log_err(&self) {
+        if let Err(err) = self {
+            error!("{err}");
+        }
+    }
 }
