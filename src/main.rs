@@ -7,6 +7,7 @@ mod util;
 
 use crate::commands::Data;
 use crate::commands::account_age::set_minimum_account_age;
+use crate::commands::ban::ban;
 use crate::commands::config::get_server_config;
 use crate::commands::help::help;
 use crate::commands::honeypot::{
@@ -24,7 +25,6 @@ use std::{env, fs};
 use tracing::error;
 use tracing_subscriber::FmtSubscriber;
 use uptime_kuma_pusher::UptimePusher;
-use crate::commands::ban::ban;
 
 pub type ButlerResult<T> = Result<T, Report>;
 

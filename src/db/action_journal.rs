@@ -36,7 +36,7 @@ impl Data {
             guild.get() as i64,
             offender.get() as i64,
             action as ModerationAction,
-            moderator.map(|x|x.get() as i64),
+            moderator.map(|x| x.get() as i64),
         )
         .execute(&self.pool)
         .await?;
