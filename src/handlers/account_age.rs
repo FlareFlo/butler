@@ -39,13 +39,8 @@ impl Handler {
         user.direct_message(&ctx.http, user_message).await?;
 
         let reason = format!(
-            "Kicked {} <@{}>\nAccount created on: {}\nVerification status: {}",
-            user.name,
-            user.id,
-            created_at,
-            user.verified
-                .map(|e| e.to_string())
-                .unwrap_or_else(|| "N/A".to_owned())
+            "Kicked {} <@{}>\nAccount created on: {}",
+            user.name, user.id, created_at,
         );
 
         // Kick them
