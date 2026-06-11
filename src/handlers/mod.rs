@@ -57,5 +57,5 @@ async fn handle_dm(ctx: Context, msg: &Message) {
     if ctx.cache.current_user().id == msg.author.id {
         return;
     }
-    info!("{} said {}", msg.author.name, msg.content);
+    info!("DM from {}", msg.author.name);
 }

@@ -57,7 +57,7 @@ async fn main() -> ButlerResult<()> {
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MODERATION
-        | GatewayIntents::MESSAGE_CONTENT;
+;
     if config.uk_url != "disabled" {
         UptimePusher::new(&config.uk_url, true).spawn_background();
     }
