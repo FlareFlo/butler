@@ -39,8 +39,8 @@ impl Handler {
         user.direct_message(&ctx.http, user_message).await?;
 
         let reason = format!(
-            "Kicked {} <@{}>\nAccount created on: {}",
-            user.name, user.id, created_at,
+            "Kicked user {}\nAccount created on: {}",
+            user.id, created_at,
         );
 
         // Kick them
