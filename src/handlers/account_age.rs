@@ -1,11 +1,22 @@
 use crate::ButlerResult;
 use crate::db::action_journal::ModerationAction;
 use crate::handlers::Handler;
-use serenity::all::{Context, CreateMessage, Member};
+use serenity::all::{Context, CreateMessage, Member, Message};
 use std::ops::Add;
 use tracing::{info, warn};
 
 impl Handler {
+    pub async fn check_account_age_from_message(
+        &self,
+        ctx: &Context,
+        msg: &Message,
+    ) -> ButlerResult<()> {
+        let Some(member) = msg.member(ctx).await.ok() else {
+            return Ok(());
+        };
+        self.check_account_age(ctx, &member).await
+    }
+
     pub async fn check_account_age(&self, ctx: &Context, new_member: &Member) -> ButlerResult<()> {
         let user = &new_member.user;
 

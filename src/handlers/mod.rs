@@ -2,7 +2,7 @@ use crate::commands::Data;
 use crate::{Config, process_result};
 use poise::async_trait;
 use serenity::all::{
-    ActivityData, Context, EventHandler, Guild, Member, Message, Ready, UnavailableGuild,
+    ActivityData, Context, EventHandler, Guild, Message, Ready, UnavailableGuild,
 };
 use tracing::info;
 
@@ -16,14 +16,10 @@ pub struct Handler {
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
-        let res = self.check_account_age(&ctx, &new_member).await;
-
-        process_result!(&self, &ctx, res, Some(new_member.guild_id));
-    }
-
     async fn message(&self, ctx: Context, msg: Message) {
         handle_dm(ctx.clone(), &msg).await;
+        let res = self.check_account_age_from_message(&ctx, &msg).await;
+        process_result!(&self, &ctx, res, msg.guild_id);
         let res = self.handle_honeypot(ctx.clone(), &msg).await;
         process_result!(&self, &ctx, res, msg.guild_id);
     }

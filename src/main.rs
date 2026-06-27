@@ -53,7 +53,6 @@ async fn main() -> ButlerResult<()> {
     let config = toml::from_str::<Config>(&fs::read_to_string("config.toml")?)?;
 
     let intents = GatewayIntents::GUILDS
-        | GatewayIntents::GUILD_MEMBERS
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MODERATION
