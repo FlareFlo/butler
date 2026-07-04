@@ -44,20 +44,26 @@ impl Handler {
                 return Ok(());
             }
 
+            let posted = OffsetDateTime::from_unix_timestamp(msg.timestamp.unix_timestamp())?;
+            let now = OffsetDateTime::now_local()?;
+            let visible_ms = (now - posted).whole_milliseconds();
+
             let reason = format!(
-                "Kicked {} for sending message into {}",
+                "Kicked {} for sending message into {}\nVisible for {}ms before kick",
                 member,
-                msg.channel(&ctx).await?
+                msg.channel(&ctx).await?,
+                visible_ms
             );
 
             member
                 .kick_with_reason(ctx.clone(), &reason)
                 .await
-                .with_context(|| format!("Failed to ban {}", member.display_name()))?;
+                .with_context(|| format!("Failed to kick {}", member.display_name()))?;
             warn!(
-                "Kicked {} for sending message into {}",
+                "Kicked {} for sending message into {} (visible: {}ms)",
                 member.display_name(),
-                msg.channel_id.name(&ctx).await?
+                msg.channel_id.name(&ctx).await?,
+                visible_ms
             );
             self.database
                 .log_action_to_journal(
@@ -67,9 +73,16 @@ impl Handler {
                     None,
                 )
                 .await?;
-            self.log_discord(&ctx, &reason, member.guild_id).await?;
 
             self.cleanup_last_hour(&ctx, msg).await?;
+
+            let cleanup_time = OffsetDateTime::now_local()?;
+            let cleanup_ms = (cleanup_time - posted).whole_milliseconds();
+            let log_msg = format!(
+                "{}\nCleaned up after {}ms",
+                reason, cleanup_ms
+            );
+            self.log_discord(&ctx, &log_msg, member.guild_id).await?;
         }
         Ok(())
     }
