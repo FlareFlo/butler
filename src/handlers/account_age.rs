@@ -30,16 +30,16 @@ impl Handler {
         };
 
         let created_at = user.created_at();
-        info!(
-            "{} just joined, their account was created at: {}",
-            user.name, created_at
-        );
 
         // Skip if user is old enough
         let now = chrono::Utc::now();
         if (now - *created_at).as_seconds_f64() > min_age.as_secs_f64() {
             return Ok(());
         }
+        info!(
+            "{} just joined, their account was created at: {}",
+            user.name, created_at
+        );
 
         // DM user for kick reason, happens before kick because it cannot talk to users
         let good_on = created_at.add(min_age).timestamp();
