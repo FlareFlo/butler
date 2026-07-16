@@ -1,6 +1,6 @@
 use crate::ButlerResult;
 use crate::db::action_journal::ModerationAction;
-use crate::handlers::Handler;
+use crate::handlers::{Handler, MSG_CACHE};
 use color_eyre::eyre::{Context as EyreContext, ContextCompat};
 use serenity::all::{ChannelId, GetMessages, MessageId, UserId};
 use serenity::all::{Context, Message};
@@ -96,6 +96,11 @@ impl Handler {
 
         // Get all channels in the guild
         let channels = guild_id.channels(&ctx.http).await?;
+
+        // Fastpass deleting known cached messages
+        if let Some((_, (channel, messages))) = MSG_CACHE.remove(&(guild_id, user_id)) {
+            channel.delete_messages(ctx.http.clone(), messages).await?;
+        }
 
         for (channel_id, channel) in channels {
             if channel.is_text_based() {

@@ -19,3 +19,4 @@ color-eyre = "0.6.5"
 sqlx = { version = "0.8.6", features = ["json", "macros", "migrate", "postgres", "runtime-tokio", "time"], default-features = false}
 poise = { version = "0.6.1", default-features = false, features = ["cache", "chrono"] }
 itertools = "0.14.0"
+dashmap = "6.2.1"

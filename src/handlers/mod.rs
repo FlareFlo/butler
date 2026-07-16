@@ -1,9 +1,9 @@
+use std::sync::LazyLock;
+use dashmap::DashMap;
 use crate::commands::Data;
 use crate::{Config, process_result};
 use poise::async_trait;
-use serenity::all::{
-    ActivityData, Context, EventHandler, Guild, Message, Ready, UnavailableGuild,
-};
+use serenity::all::{ActivityData, ChannelId, Context, EventHandler, Guild, GuildId, Message, MessageId, Ready, UnavailableGuild, UserId};
 use tracing::info;
 
 mod account_age;
@@ -45,9 +45,14 @@ impl EventHandler for Handler {
     }
 }
 
+pub static MSG_CACHE: LazyLock<DashMap<(GuildId, UserId), (ChannelId, Vec<MessageId>)>>  = LazyLock::new(||DashMap::<(GuildId, UserId), (ChannelId, Vec<MessageId>)>::new());
+
 async fn handle_dm(ctx: Context, msg: &Message) {
     // Ignore non-DMs
-    if msg.guild_id.is_some() {
+    if let Some(gid) = msg.guild_id {
+        MSG_CACHE.entry((gid, msg.author.id))
+            .and_modify(|e|e.1.push(msg.id))
+            .or_insert((msg.channel_id, vec![msg.id]));
         return;
     }
     if ctx.cache.current_user().id == msg.author.id {
