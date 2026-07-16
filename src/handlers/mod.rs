@@ -1,4 +1,5 @@
 use std::sync::LazyLock;
+use chrono::Utc;
 use dashmap::DashMap;
 use crate::commands::Data;
 use crate::{Config, process_result};
@@ -46,6 +47,14 @@ impl EventHandler for Handler {
 }
 
 pub static MSG_CACHE: LazyLock<DashMap<(GuildId, UserId, ChannelId), Vec<MessageId>>>  = LazyLock::new(||DashMap::<(GuildId, UserId, ChannelId), Vec<MessageId>>::new());
+
+pub fn evict_stale_cache_entries() {
+    let cutoff = Utc::now() - chrono::Duration::hours(1);
+    MSG_CACHE.retain(|_key, messages| {
+        messages.retain(|msg_id| *msg_id.created_at() > cutoff);
+        !messages.is_empty()
+    });
+}
 
 async fn handle_dm(ctx: Context, msg: &Message) {
     // Ignore non-DMs

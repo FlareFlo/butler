@@ -15,8 +15,9 @@ use crate::commands::honeypot::{
 };
 use crate::commands::logging_channel::logging_channel;
 use color_eyre::Report;
-use handlers::Handler;
+use handlers::{evict_stale_cache_entries, Handler};
 use serde::Deserialize;
+use std::time::Duration;
 use serenity::prelude::*;
 use sqlx::PgPool;
 use sqlx::migrate::Migrator;
@@ -94,6 +95,14 @@ async fn main() -> ButlerResult<()> {
         .framework(framework)
         .await
         .expect("Err creating client");
+
+    tokio::spawn(async {
+        let mut interval = tokio::time::interval(Duration::from_secs(300));
+        loop {
+            interval.tick().await;
+            evict_stale_cache_entries();
+        }
+    });
 
     client.start().await?;
     Ok(())
