@@ -107,7 +107,9 @@ impl Handler {
             MSG_CACHE.remove(&(guild_id, user_id, *key));
         }
         for (channel, messages) in cached {
-            channel.delete_messages(ctx.http.clone(), messages).await?;
+            for chunk in messages.chunks(100) {
+                channel.delete_messages(ctx.http.clone(), chunk.to_vec()).await?;
+            }
         }
 
         for (channel_id, channel) in channels {
