@@ -98,7 +98,15 @@ impl Handler {
         let channels = guild_id.channels(&ctx.http).await?;
 
         // Fastpass deleting known cached messages
-        if let Some((_, (channel, messages))) = MSG_CACHE.remove(&(guild_id, user_id)) {
+        let cached: Vec<(ChannelId, Vec<MessageId>)> = MSG_CACHE
+            .iter()
+            .filter(|entry| entry.key().0 == guild_id && entry.key().1 == user_id)
+            .map(|entry| (entry.key().2, entry.value().clone()))
+            .collect();
+        for (key, _) in &cached {
+            MSG_CACHE.remove(&(guild_id, user_id, *key));
+        }
+        for (channel, messages) in cached {
             channel.delete_messages(ctx.http.clone(), messages).await?;
         }
 

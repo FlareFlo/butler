@@ -45,14 +45,15 @@ impl EventHandler for Handler {
     }
 }
 
-pub static MSG_CACHE: LazyLock<DashMap<(GuildId, UserId), (ChannelId, Vec<MessageId>)>>  = LazyLock::new(||DashMap::<(GuildId, UserId), (ChannelId, Vec<MessageId>)>::new());
+pub static MSG_CACHE: LazyLock<DashMap<(GuildId, UserId, ChannelId), Vec<MessageId>>>  = LazyLock::new(||DashMap::<(GuildId, UserId, ChannelId), Vec<MessageId>>::new());
 
 async fn handle_dm(ctx: Context, msg: &Message) {
     // Ignore non-DMs
     if let Some(gid) = msg.guild_id {
-        MSG_CACHE.entry((gid, msg.author.id))
-            .and_modify(|e|e.1.push(msg.id))
-            .or_insert((msg.channel_id, vec![msg.id]));
+        MSG_CACHE
+            .entry((gid, msg.author.id, msg.channel_id))
+            .or_default()
+            .push(msg.id);
         return;
     }
     if ctx.cache.current_user().id == msg.author.id {
