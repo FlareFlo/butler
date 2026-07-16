@@ -2,7 +2,7 @@ use crate::ButlerResult;
 use crate::db::action_journal::ModerationAction;
 use crate::handlers::Handler;
 use color_eyre::eyre::{Context as EyreContext, ContextCompat};
-use serenity::all::GetMessages;
+use serenity::all::{ChannelId, GetMessages, MessageId, UserId};
 use serenity::all::{Context, Message};
 use std::ops::Not;
 use time::{Duration, OffsetDateTime};
@@ -74,6 +74,7 @@ impl Handler {
                 )
                 .await?;
 
+            info!("Started cleaning up after {}", member.user.id);
             self.cleanup_last_hour(&ctx, msg).await?;
 
             let cleanup_time = OffsetDateTime::now_local()?;
@@ -92,28 +93,44 @@ impl Handler {
         let guild_id = msg.guild_id.context("missing guild id")?;
 
         let user_id = msg.author.id;
-        let one_hour_ago = OffsetDateTime::now_local()? - Duration::hours(1);
 
         // Get all channels in the guild
         let channels = guild_id.channels(&ctx.http).await?;
 
+        let mut last_message_id = Some(msg.id);
         for (channel_id, channel) in channels {
             if channel.is_text_based() {
-                // Fetch up to 100 most recent messages (API limit)
-                if let Ok(messages) = channel_id
-                    .messages(&ctx.http, GetMessages::new().limit(100))
-                    .await
-                {
-                    for message in messages {
-                        if message.author.id == user_id
-                            && message.timestamp.unix_timestamp() > one_hour_ago.unix_timestamp()
-                        {
-                            channel_id.delete_message(&ctx.http, message.id).await?;
+                // Scan up to 300 messages
+                for _ in 0..3 {
+                    if let Some(last_mid) = last_message_id {
+                        let new_last = self.clean_channel_after(ctx, channel_id, user_id, last_mid).await?;
+                        if new_last == last_message_id {
+                            break
                         }
+                    } else {
+                        warn!("Missing last message_id for cleaning up {user_id}");
                     }
                 }
             }
         }
         Ok(())
+    }
+
+    async fn clean_channel_after(&self, ctx: &Context, channel_id: ChannelId, user_id: UserId, message_id: MessageId) -> ButlerResult<Option<MessageId>> {
+        let mut last_id = None;
+        // Fetch up to 100 most recent messages (API limit)
+        if let Ok(messages) = channel_id
+            .messages(&ctx.http, GetMessages::new().limit(100).after(message_id))
+            .await
+        {
+            for message in messages {
+                if message.author.id == user_id
+                {
+                    channel_id.delete_message(&ctx.http, message_id).await?;
+                }
+                last_id = Some(message.id);
+            }
+        }
+        Ok(last_id)
     }
 }
