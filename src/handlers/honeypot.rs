@@ -5,7 +5,7 @@ use color_eyre::eyre::{Context as EyreContext, ContextCompat};
 use serenity::all::{ChannelId, GetMessages, MessageId, UserId};
 use serenity::all::{Context, Message};
 use std::ops::Not;
-use time::{Duration, OffsetDateTime};
+use time::OffsetDateTime;
 use tracing::{info, warn};
 
 impl Handler {
@@ -97,18 +97,22 @@ impl Handler {
         // Get all channels in the guild
         let channels = guild_id.channels(&ctx.http).await?;
 
-        let mut last_message_id = Some(msg.id);
         for (channel_id, channel) in channels {
             if channel.is_text_based() {
-                // Scan up to 300 messages
+                // Scan up to 300 messages per channel
+                let mut last_id = Some(msg.id);
                 for _ in 0..3 {
-                    if let Some(last_mid) = last_message_id {
-                        let new_last = self.clean_channel_after(ctx, channel_id, user_id, last_mid).await?;
-                        if new_last == last_message_id {
-                            break
+                    match last_id {
+                        Some(mid) => {
+                            last_id = self.clean_channel_after(ctx, channel_id, user_id, mid).await?;
+                            if last_id == Some(mid) {
+                                break;
+                            }
                         }
-                    } else {
-                        warn!("Missing last message_id for cleaning up {user_id}");
+                        None => {
+                            warn!("Missing last message_id for cleaning up {user_id}");
+                            break;
+                        }
                     }
                 }
             }
@@ -120,13 +124,13 @@ impl Handler {
         let mut last_id = None;
         // Fetch up to 100 most recent messages (API limit)
         if let Ok(messages) = channel_id
-            .messages(&ctx.http, GetMessages::new().limit(100).after(message_id))
+            .messages(&ctx.http, GetMessages::new().limit(100).before(message_id))
             .await
         {
             for message in messages {
                 if message.author.id == user_id
                 {
-                    channel_id.delete_message(&ctx.http, message_id).await?;
+                    channel_id.delete_message(&ctx.http, message.id).await?;
                 }
                 last_id = Some(message.id);
             }
