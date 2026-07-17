@@ -1,11 +1,9 @@
 use crate::commands::PoiseContext;
 use crate::db::action_journal::ModerationAction;
-use crate::error::ButlerErrorExt;
 use crate::serenity_ext::SerenityExt;
 use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
-use serenity::all::{Channel, Member, User, UserId};
-use tracing::error;
+use serenity::all::Member;
 
 #[poise::command(slash_command, required_permissions = "BAN_MEMBERS", guild_only)]
 pub async fn ban(
@@ -56,13 +54,11 @@ pub async fn ban(
         )
         .await;
 
-    if log.is_err() {
-        ctx.reply("Banned {who} but failed to log this action")
+    if let Err(err) = log {
+        ctx.reply(format!("Banned {who} but failed to log this action: {err}"))
             .await?;
-        log.log_err();
-        log?;
     } else {
-        ctx.reply("Banned {who}").await?;
+        ctx.reply(format!("Banned {who}")).await?;
     }
 
     Ok(())

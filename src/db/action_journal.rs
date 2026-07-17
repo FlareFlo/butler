@@ -2,21 +2,12 @@ use crate::ButlerResult;
 use crate::commands::Data;
 use serenity::all::{GuildId, UserId};
 use sqlx::query;
-use time::UtcDateTime;
-
 #[derive(sqlx::Type, Debug, Clone, Copy, PartialEq, Eq)]
 #[sqlx(type_name = "moderation_action", rename_all = "snake_case")]
 pub enum ModerationAction {
     KickedHoneypot,
     KickedAccountAge,
     CommandBanned,
-}
-
-pub struct ActionJournal {
-    guild_id: GuildId,
-    offender_id: UserId,
-    action: ModerationAction,
-    time: UtcDateTime,
 }
 
 impl Data {

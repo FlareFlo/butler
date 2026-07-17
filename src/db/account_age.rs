@@ -33,7 +33,7 @@ impl Data {
     ) -> ButlerResult<()> {
         self.ensure_guild_exists(guild_id).await?;
 
-        let record = query!(
+        query!(
             "
 			UPDATE guilds
 			SET account_minimum_age = $1

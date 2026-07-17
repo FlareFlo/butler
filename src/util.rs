@@ -40,10 +40,10 @@ WHERE id = $1
         )
         .fetch_optional(&self.database.pool)
         .await?
-        .context("logging channel without message")?;
+        .context("guild not found")?;
 
         let log_message = CreateMessage::new().content(reason);
-        ChannelId::new(query.logging_channel.context("")? as _)
+        ChannelId::new(query.logging_channel.context("Logging channel not configured for this guild")? as _)
             .send_message(&ctx.http, log_message)
             .await?;
         Ok(())

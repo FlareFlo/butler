@@ -1,12 +1,11 @@
 use crate::ButlerResult;
-use crate::commands::{Data, PoiseContext};
+use crate::commands::Data;
 use serenity::all::{ChannelId, GuildId};
 use sqlx::query;
 
 impl Data {
     pub async fn set_logging_channel(
         &self,
-        ctx: &PoiseContext<'_>,
         channel: ChannelId,
         guild: GuildId,
     ) -> ButlerResult<()> {
@@ -21,14 +20,13 @@ impl Data {
             channel.get() as i64,
             guild.get() as i64
         )
-        .execute(&ctx.data().pool)
+        .execute(&self.pool)
         .await?;
         Ok(())
     }
 
     pub async fn reset_logging_channel(
         &self,
-        ctx: &PoiseContext<'_>,
         guild: GuildId,
     ) -> ButlerResult<()> {
         self.ensure_guild_exists(guild).await?;
@@ -41,14 +39,13 @@ impl Data {
  		",
             guild.get() as i64
         )
-        .execute(&ctx.data().pool)
+        .execute(&self.pool)
         .await?;
         Ok(())
     }
 
     pub async fn get_logging_channel(
         &self,
-        ctx: &PoiseContext<'_>,
         guild: GuildId,
     ) -> ButlerResult<Option<ChannelId>> {
         let record = query!(
@@ -59,7 +56,7 @@ impl Data {
  		",
             guild.get() as i64
         )
-        .fetch_optional(&ctx.data().pool)
+        .fetch_optional(&self.pool)
         .await?;
         Ok(record.and_then(|r| r.logging_channel.map(|id| ChannelId::new(id as u64))))
     }

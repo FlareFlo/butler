@@ -14,12 +14,12 @@ pub async fn logging_channel(
 
     if let Some(channel) = channel {
         ctx.data()
-            .set_logging_channel(&ctx, channel.id(), guild)
+            .set_logging_channel(channel.id(), guild)
             .await?;
         ctx.reply(format!("Set logging channel to {channel}"))
             .await?;
     } else {
-        ctx.data().reset_logging_channel(&ctx, guild).await?;
+        ctx.data().reset_logging_channel(guild).await?;
         ctx.reply("Removed logging channel").await?;
     }
     Ok(())

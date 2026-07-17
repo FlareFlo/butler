@@ -10,7 +10,7 @@ pub async fn get_server_config(ctx: PoiseContext<'_>) -> Result<(), Report> {
         .context("Command should be guild only but guild_id was unset")?;
 
     let honeypot = ctx.data().get_honeypot_from_guild_id(guild).await?;
-    let logging_channel = ctx.data().get_logging_channel(&ctx, guild).await?;
+    let logging_channel = ctx.data().get_logging_channel(guild).await?;
 
     if honeypot.is_none() && logging_channel.is_none() {
         ctx.reply("Nothing is configured yet.").await?;
