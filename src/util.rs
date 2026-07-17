@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use crate::ButlerResult;
 use crate::handlers::Handler;
 use color_eyre::eyre::ContextCompat;
@@ -5,6 +6,24 @@ use serenity::all::{ChannelId, Context, CreateMessage, GuildId};
 use sqlx::query;
 
 impl Handler {
+    pub async fn process_result<T, E: Display>(
+        &self,
+        ctx: &Context,
+        res: Result<T, E>,
+        guild_id: Option<GuildId>,
+    ) {
+        if let Err(error) = res {
+            let errstr = error.to_string();
+            tracing::error!("{}", errstr);
+            if let Some(guild_id) = guild_id {
+                let err = self.log_discord(ctx, &errstr, guild_id).await;
+                if let Err(err) = err {
+                    tracing::error!("Failed to log to discord: {}", err.to_string());
+                }
+            }
+        }
+    }
+
     pub async fn log_discord(
         &self,
         ctx: &Context,
