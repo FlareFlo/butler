@@ -125,7 +125,6 @@ impl Handler {
                             }
                         }
                         None => {
-                            warn!("Missing last message_id for cleaning up {user_id}");
                             break;
                         }
                     }
