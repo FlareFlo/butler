@@ -75,13 +75,14 @@ impl Handler {
                 .await?;
 
             info!("Started cleaning up after {}", member.user.id);
-            self.cleanup_last_hour(&ctx, msg).await?;
+            let (fast, scan) = self.cleanup_last_hour(&ctx, msg).await?;
+            let total = fast + scan;
 
             let cleanup_time = OffsetDateTime::now_local()?;
-            let cleanup_ms = (cleanup_time - posted).whole_milliseconds();
+            let cleanup_dur = std::time::Duration::from_millis((cleanup_time - posted).whole_milliseconds() as u64);
             let log_msg = format!(
-                "{}\nCleaned up after {}ms",
-                reason, cleanup_ms
+                "{}\nCleaned up after {} (cache: {}, scan: {}, total: {})",
+                reason, humantime::format_duration(cleanup_dur), fast, scan, total
             );
             self.log_discord(&ctx, &log_msg, member.guild_id).await?;
         }
@@ -89,7 +90,8 @@ impl Handler {
     }
 
     /// Deletes all messages of user for past hour
-    pub async fn cleanup_last_hour(&self, ctx: &Context, msg: &Message) -> ButlerResult<()> {
+    /// Returns (fast_pass_count, scan_pass_count)
+    pub async fn cleanup_last_hour(&self, ctx: &Context, msg: &Message) -> ButlerResult<(u64, u64)> {
         let guild_id = msg.guild_id.context("missing guild id")?;
 
         let user_id = msg.author.id;
@@ -103,6 +105,7 @@ impl Handler {
             .filter(|entry| entry.key().0 == guild_id && entry.key().1 == user_id)
             .map(|entry| (entry.key().2, entry.value().clone()))
             .collect();
+        let fast_count = cached.iter().map(|(_, msgs)| msgs.len() as u64).sum();
         for (key, _) in &cached {
             MSG_CACHE.remove(&(guild_id, user_id, *key));
         }
@@ -113,6 +116,7 @@ impl Handler {
         }
 
         // Slow pass
+        let mut scan_count = 0u64;
         for (channel_id, channel) in channels {
             if channel.is_text_based() {
                 // Scan up to 300 messages per channel
@@ -120,7 +124,7 @@ impl Handler {
                 for _ in 0..3 {
                     match last_id {
                         Some(mid) => {
-                            last_id = self.clean_channel_after(ctx, channel_id, user_id, mid).await?;
+                            last_id = self.clean_channel_after(ctx, channel_id, user_id, mid, &mut scan_count).await?;
                             if last_id == Some(mid) {
                                 break;
                             }
@@ -132,10 +136,10 @@ impl Handler {
                 }
             }
         }
-        Ok(())
+        Ok((fast_count, scan_count))
     }
 
-    async fn clean_channel_after(&self, ctx: &Context, channel_id: ChannelId, user_id: UserId, message_id: MessageId) -> ButlerResult<Option<MessageId>> {
+    async fn clean_channel_after(&self, ctx: &Context, channel_id: ChannelId, user_id: UserId, message_id: MessageId, count: &mut u64) -> ButlerResult<Option<MessageId>> {
         let mut last_id = None;
         // Fetch up to 100 most recent messages (API limit)
         if let Ok(messages) = channel_id
@@ -146,6 +150,7 @@ impl Handler {
                 if message.author.id == user_id
                 {
                     channel_id.delete_message(&ctx.http, message.id).await?;
+                    *count += 1;
                 }
                 last_id = Some(message.id);
             }
