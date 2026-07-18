@@ -3,7 +3,7 @@ use crate::db::action_journal::ModerationAction;
 use crate::handlers::{Handler, MSG_CACHE};
 use color_eyre::eyre::{Context as EyreContext, ContextCompat};
 use serenity::all::{ChannelId, GetMessages, MessageId, UserId};
-use serenity::all::{Context, Message};
+use serenity::all::{Context, CreateEmbed, Message};
 use std::ops::Not;
 use time::OffsetDateTime;
 use tracing::{info, warn};
@@ -80,11 +80,17 @@ impl Handler {
 
             let cleanup_time = OffsetDateTime::now_local()?;
             let cleanup_dur = std::time::Duration::from_millis((cleanup_time - posted).whole_milliseconds() as u64);
-            let log_msg = format!(
-                "{}\nCleaned up after {} (cache: {}, scan: {}, total: {})",
-                reason, humantime::format_duration(cleanup_dur), fast, scan, total
-            );
-            self.log_discord(&ctx, &log_msg, member.guild_id).await?;
+            let embed = CreateEmbed::new()
+                .title("Honeypot Kick")
+                .color(0xED4245)
+                .field("User", member.to_string(), true)
+                .field("Channel", msg.channel(&ctx).await?.to_string(), true)
+                .field("Visible", format!("{}ms", visible_ms), true)
+                .field("Deleted", format!("{} cache / {} scan / {} total", fast, scan, total), false)
+                .footer(serenity::all::CreateEmbedFooter::new(
+                    format!("Cleanup took {}", humantime::format_duration(cleanup_dur)),
+                ));
+            self.log_embed(&ctx, embed, member.guild_id).await?;
         }
         Ok(())
     }

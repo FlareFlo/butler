@@ -1,7 +1,7 @@
 use crate::ButlerResult;
 use crate::db::action_journal::ModerationAction;
 use crate::handlers::Handler;
-use serenity::all::{Context, CreateMessage, Member, Message};
+use serenity::all::{Context, CreateEmbed, CreateMessage, Member, Message};
 use std::ops::Add;
 use tracing::{info, warn};
 
@@ -68,7 +68,13 @@ impl Handler {
             .await?;
 
         // Log the kick
-        self.log_discord(&ctx, &reason, new_member.guild_id).await?;
+        let embed = CreateEmbed::new()
+            .title("Account Age Kick")
+            .color(0xF57C00)
+            .field("User", user.id.to_string(), true)
+            .field("Account created", created_at.to_string(), true)
+            .field("Minimum age", humantime::format_duration(min_age).to_string(), true);
+        self.log_embed(&ctx, embed, new_member.guild_id).await?;
         Ok(())
     }
 }
