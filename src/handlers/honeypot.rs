@@ -112,6 +112,7 @@ impl Handler {
             }
         }
 
+        // Slow pass
         for (channel_id, channel) in channels {
             if channel.is_text_based() {
                 // Scan up to 300 messages per channel
