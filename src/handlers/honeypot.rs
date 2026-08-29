@@ -58,7 +58,7 @@ impl Handler {
             member
                 .kick_with_reason(ctx.clone(), &reason)
                 .await
-                .with_context(|| format!("Failed to kick {}", member.display_name()))?;
+                .with_context(|| format!("Failed to kick {}. Check permissions and role ordering.", member.display_name()))?;
             warn!(
                 "Kicked {} for sending message into {} (visible: {}ms)",
                 member.display_name(),
@@ -117,7 +117,15 @@ impl Handler {
         }
         for (channel, messages) in cached {
             for chunk in messages.chunks(100) {
-                channel.delete_messages(ctx.http.clone(), chunk.to_vec()).await?;
+                if chunk.len() == 1 {
+                    if let Err(e) = channel.delete_message(&ctx.http, chunk[0]).await {
+                        tracing::warn!("Failed to delete single message in fastpass: {}", e);
+                    }
+                } else if !chunk.is_empty() {
+                    if let Err(e) = channel.delete_messages(&ctx.http, chunk.to_vec()).await {
+                        tracing::warn!("Failed to bulk delete messages in fastpass: {}", e);
+                    }
+                }
             }
         }
 
@@ -126,18 +134,11 @@ impl Handler {
         for (channel_id, channel) in channels {
             if channel.is_text_based() {
                 // Scan up to 300 messages per channel
-                let mut last_id = Some(msg.id);
+                let mut last_id = None;
                 for _ in 0..3 {
-                    match last_id {
-                        Some(mid) => {
-                            last_id = self.clean_channel_after(ctx, channel_id, user_id, mid, &mut scan_count).await?;
-                            if last_id == Some(mid) {
-                                break;
-                            }
-                        }
-                        None => {
-                            break;
-                        }
+                    last_id = self.clean_channel_after(ctx, channel_id, user_id, last_id, &mut scan_count).await?;
+                    if last_id.is_none() {
+                        break;
                     }
                 }
             }
@@ -145,22 +146,31 @@ impl Handler {
         Ok((fast_count, scan_count))
     }
 
-    async fn clean_channel_after(&self, ctx: &Context, channel_id: ChannelId, user_id: UserId, message_id: MessageId, count: &mut u64) -> ButlerResult<Option<MessageId>> {
-        let mut last_id = None;
-        // Fetch up to 100 most recent messages (API limit)
-        if let Ok(messages) = channel_id
-            .messages(&ctx.http, GetMessages::new().limit(100).before(message_id))
-            .await
-        {
-            for message in messages {
-                if message.author.id == user_id
-                {
-                    channel_id.delete_message(&ctx.http, message.id).await?;
-                    *count += 1;
+    async fn clean_channel_after(&self, ctx: &Context, channel_id: ChannelId, user_id: UserId, before_id: Option<MessageId>, count: &mut u64) -> ButlerResult<Option<MessageId>> {
+        let mut req = GetMessages::new().limit(100);
+        if let Some(id) = before_id {
+            req = req.before(id);
+        }
+
+        match channel_id.messages(&ctx.http, req).await {
+            Ok(messages) => {
+                let mut last = None;
+                for message in messages {
+                    if message.author.id == user_id {
+                        if let Err(e) = channel_id.delete_message(&ctx.http, message.id).await {
+                            tracing::warn!("Failed to delete message in scan pass: {}", e);
+                        } else {
+                            *count += 1;
+                        }
+                    }
+                    last = Some(message.id);
                 }
-                last_id = Some(message.id);
+                Ok(last)
+            }
+            Err(e) => {
+                tracing::warn!("Failed to fetch messages for channel {}: {}", channel_id, e);
+                Ok(None)
             }
         }
-        Ok(last_id)
     }
 }
