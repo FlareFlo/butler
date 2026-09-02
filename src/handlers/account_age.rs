@@ -72,7 +72,7 @@ impl Handler {
             .title("Account Age Kick")
             .color(0xF57C00)
             .field("User", user.id.to_string(), true)
-            .field("Account created", created_at.to_string(), true)
+            .field("Account created", format!("<t:{}:f>", created_at.timestamp()), true)
             .field("Minimum age", humantime::format_duration(min_age).to_string(), true);
         self.log_embed(&ctx, embed, new_member.guild_id).await?;
         Ok(())
