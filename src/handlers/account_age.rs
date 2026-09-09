@@ -47,16 +47,20 @@ impl Handler {
             "Your account must be at least {} old.\nYou may rejoin on <t:{good_on}:f>\nDO NOT REPLY TO THIS MESSAGE, IT IS AUTOMATED AND WILL NOT BE READ OR RESPONDED TO!",
             humantime::format_duration(min_age)
         ));
-        user.direct_message(&ctx.http, user_message).await?;
+        if let Err(e) = user.direct_message(&ctx.http, user_message).await {
+            warn!("Failed to DM user {}: {}", user.name, e);
+        }
 
         let reason = format!(
             "Kicked user {}\nAccount created on: {}",
             user.id, created_at,
         );
 
-        // Kick them
-        new_member.kick_with_reason(&ctx.http, &reason).await?;
-        warn!("Kicked {} for being too new!", user.name);
+        if let Err(e) = new_member.kick_with_reason(&ctx.http, &reason).await {
+            tracing::error!("Failed to kick {}! Check bot permissions and role hierarchy. Error: {}", user.name, e);
+            return Err(e.into());
+        }
+        warn!("Successfully kicked {} for being too new!", user.name);
 
         self.database
             .log_action_to_journal(

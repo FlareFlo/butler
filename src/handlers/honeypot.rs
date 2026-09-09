@@ -60,7 +60,7 @@ impl Handler {
                 .await
                 .with_context(|| format!("Failed to kick {}. Check permissions and role ordering.", member.display_name()))?;
             warn!(
-                "Kicked {} for sending message into {} (visible: {}ms)",
+                "Successfully kicked {} for sending message into {} (visible: {}ms)",
                 member.display_name(),
                 msg.channel_id.name(&ctx).await?,
                 visible_ms
