@@ -14,11 +14,11 @@ impl Handler {
     ) {
         if let Err(error) = res {
             let errstr = error.to_string();
-            tracing::error!("{}", errstr);
+            tracing::error!("Action failed (Guild: {:?}): {}", guild_id, errstr);
             if let Some(guild_id) = guild_id {
                 let err = self.log_discord(ctx, &errstr, guild_id).await;
                 if let Err(err) = err {
-                    tracing::error!("Failed to log to discord: {}", err.to_string());
+                    tracing::error!("Failed to log to discord (Guild: {}): {}", guild_id, err.to_string());
                 }
             }
         }
