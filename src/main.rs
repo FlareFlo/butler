@@ -24,7 +24,7 @@ use sqlx::migrate::Migrator;
 use std::process::exit;
 use std::{env, fs};
 use tracing::error;
-use tracing_subscriber::FmtSubscriber;
+use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use uptime_kuma_pusher::UptimePusher;
 
 pub type ButlerResult<T> = Result<T, Report>;
@@ -40,7 +40,15 @@ static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 #[tokio::main]
 async fn main() -> ButlerResult<()> {
     color_eyre::install()?;
-    tracing::subscriber::set_global_default(FmtSubscriber::builder().finish())?;
+
+    let filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new("info,serenity::gateway::shard=warn"));
+
+    tracing::subscriber::set_global_default(
+        FmtSubscriber::builder()
+            .with_env_filter(filter)
+            .finish()
+    )?;
 
     ctrlc::set_handler(move || {
         error!("Got shutdown signal");
