@@ -3,7 +3,7 @@ use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
 use poise::serenity_prelude::Channel;
 
-#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
+#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Sets or unsets the channel for moderation logs"))]
 pub async fn logging_channel(
     ctx: PoiseContext<'_>,
     #[description = "Channel to log messages to"] channel: Option<Channel>,

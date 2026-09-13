@@ -6,7 +6,7 @@ use poise::serenity_prelude::Channel;
 use serenity::all::Role;
 use std::iter::once;
 
-#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
+#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Initializes the honeypot configuration for this server"))]
 pub async fn setup_honeypot(
     ctx: PoiseContext<'_>,
     #[description = "Honeypot channel"] honeypot: Channel,
@@ -31,7 +31,7 @@ pub async fn setup_honeypot(
     Ok(())
 }
 
-#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
+#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Adds a new safe role to the honeypot whitelist"))]
 pub async fn add_safe_role(
     ctx: PoiseContext<'_>,
     #[description = "Safe role that will not be acted upon when typing in the honeypot"] safe_role: Role,
@@ -56,7 +56,7 @@ pub async fn add_safe_role(
     Ok(())
 }
 
-#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
+#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Removes a safe role from the honeypot whitelist"))]
 pub async fn remove_safe_role(
     ctx: PoiseContext<'_>,
     #[description = "Safe role that will not be acted upon when typing in the honeypot"] safe_role: Role,
@@ -81,7 +81,7 @@ pub async fn remove_safe_role(
     Ok(())
 }
 
-#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
+#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Adds an additional channel to the honeypot system"))]
 pub async fn add_honeypot_channel(
     ctx: PoiseContext<'_>,
     #[description = "Honeypot channel that gets users punished if used"] channel: Channel,
@@ -106,7 +106,7 @@ pub async fn add_honeypot_channel(
     Ok(())
 }
 
-#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
+#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Removes a channel from the honeypot system"))]
 pub async fn remove_honeypot_channel(
     ctx: PoiseContext<'_>,
     #[description = "Honeypot channel that gets users punished if used"] channel: Channel,
