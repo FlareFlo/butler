@@ -1,7 +1,7 @@
 use crate::ButlerResult;
 use crate::db::action_journal::ModerationAction;
 use crate::handlers::{Handler, MSG_CACHE};
-use color_eyre::eyre::{Context as EyreContext, ContextCompat};
+use color_eyre::eyre::{Context as _, ContextCompat};
 use serenity::all::{ChannelId, GetMessages, MessageId, UserId};
 use serenity::all::{Context, CreateEmbed, Message};
 use std::ops::Not;
@@ -12,90 +12,100 @@ impl Handler {
     pub async fn handle_honeypot(&self, ctx: Context, msg: &Message) -> ButlerResult<()> {
         let Some(guild_id) = msg.guild_id else { return Ok(()); };
         
-        let member_roles = msg.member.as_ref().map(|m| &m.roles);
-        if let Some(roles) = member_roles {
-            let honeypot = self
-                .database
-                .get_honeypot_from_guild_id(guild_id)
-                .await?;
+        let honeypot = self
+            .database
+            .get_honeypot_from_guild_id(guild_id)
+            .await?;
 
-            let Some(honeypot) = honeypot else {
-                return Ok(());
-            };
+        let Some(honeypot) = honeypot else {
+            return Ok(());
+        };
 
-            if honeypot.enabled.not() {
-                return Ok(());
-            }
-
-            if !honeypot
-                .channel_ids
-                .contains(&(msg.channel_id.get() as i64))
-            {
-                return Ok(());
-            }
-            // Ignore whitelisted roles
-            if honeypot
-                .safe_role_ids
-                .iter()
-                .any(|&safe| roles.iter().any(|role| safe == role.get() as i64))
-            {
-                info!(
-                    "{} talked in {} but their role is whitelisted",
-                    msg.author.name,
-                    msg.channel_id.name(&ctx).await?
-                );
-                return Ok(());
-            }
-
-            let posted = OffsetDateTime::from_unix_timestamp(msg.timestamp.unix_timestamp())?;
-            let now = OffsetDateTime::now_local()?;
-            let visible_ms = (now - posted).whole_milliseconds();
-
-            let reason = format!(
-                "Kicked {} for sending message into {}\nVisible for {}ms before kick",
-                msg.author.name,
-                msg.channel(&ctx).await?,
-                visible_ms
-            );
-
-            info!("Attempting to kick {} from honeypot...", msg.author.name);
-            guild_id
-                .kick_with_reason(ctx.clone(), msg.author.id, &reason)
-                .await
-                .with_context(|| format!("Failed to kick {}. Check permissions and role ordering.", msg.author.name))?;
-            warn!(
-                "Successfully kicked {} for sending message into {} (visible: {}ms)",
-                msg.author.name,
-                msg.channel_id.name(&ctx).await?,
-                visible_ms
-            );
-            self.database
-                .log_action_to_journal(
-                    guild_id,
-                    msg.author.id,
-                    ModerationAction::KickedHoneypot,
-                    None,
-                )
-                .await?;
-
-            info!("Started cleaning up after {}", msg.author.id);
-            let (fast, scan) = self.cleanup_last_hour(&ctx, msg).await?;
-            let total = fast + scan;
-
-            let cleanup_time = OffsetDateTime::now_local()?;
-            let cleanup_dur = std::time::Duration::from_millis((cleanup_time - posted).whole_milliseconds() as u64);
-            let embed = CreateEmbed::new()
-                .title("Honeypot Kick")
-                .color(0xED4245)
-                .field("User", msg.author.to_string(), true)
-                .field("Channel", msg.channel(&ctx).await?.to_string(), true)
-                .field("Visible", format!("{}ms", visible_ms), true)
-                .field("Deleted", format!("{} cache / {} scan / {} total", fast, scan, total), false)
-                .footer(serenity::all::CreateEmbedFooter::new(
-                    format!("Cleanup took {}", humantime::format_duration(cleanup_dur)),
-                ));
-            self.log_embed(&ctx, embed, guild_id).await?;
+        if honeypot.enabled.not() {
+            return Ok(());
         }
+
+        if !honeypot
+            .channel_ids
+            .contains(&(msg.channel_id.get() as i64))
+        {
+            return Ok(());
+        }
+
+        // We are in an armed honeypot channel. Get roles, falling back to HTTP if missing.
+        let roles = match msg.member.as_ref() {
+            Some(m) => m.roles.clone(),
+            None => {
+                match guild_id.member(&ctx.http, msg.author.id).await {
+                    Ok(member) => member.roles.clone(),
+                    Err(_) => return Ok(()), // User left or is a webhook
+                }
+            }
+        };
+
+        // Ignore whitelisted roles
+        if honeypot
+            .safe_role_ids
+            .iter()
+            .any(|&safe| roles.iter().any(|role| safe == role.get() as i64))
+        {
+            info!(
+                "{} talked in {} but their role is whitelisted",
+                msg.author.name,
+                msg.channel_id.name(&ctx).await?
+            );
+            return Ok(());
+        }
+
+        let posted = OffsetDateTime::from_unix_timestamp(msg.timestamp.unix_timestamp())?;
+        let now = OffsetDateTime::now_local()?;
+        let visible_ms = (now - posted).whole_milliseconds();
+
+        let reason = format!(
+            "Kicked {} for sending message into {}\nVisible for {}ms before kick",
+            msg.author.name,
+            msg.channel(&ctx).await?,
+            visible_ms
+        );
+
+        info!("Attempting to kick {} from honeypot...", msg.author.name);
+        if let Err(e) = guild_id.kick_with_reason(ctx.clone(), msg.author.id, &reason).await {
+            tracing::error!("Failed to kick {}. Check permissions and role ordering. Error: {}", msg.author.name, e);
+            return Err(e.into());
+        }
+        warn!(
+            "Successfully kicked {} for sending message into {} (visible: {}ms)",
+            msg.author.name,
+            msg.channel_id.name(&ctx).await?,
+            visible_ms
+        );
+        self.database
+            .log_action_to_journal(
+                guild_id,
+                msg.author.id,
+                ModerationAction::KickedHoneypot,
+                None,
+            )
+            .await?;
+
+        info!("Started cleaning up after {}", msg.author.id);
+        let (fast, scan) = self.cleanup_last_hour(&ctx, msg).await?;
+        let total = fast + scan;
+
+        let cleanup_time = OffsetDateTime::now_local()?;
+        let cleanup_dur = std::time::Duration::from_millis((cleanup_time - posted).whole_milliseconds() as u64);
+        let embed = CreateEmbed::new()
+            .title("Honeypot Kick")
+            .color(0xED4245)
+            .field("User", msg.author.to_string(), true)
+            .field("Channel", msg.channel(&ctx).await?.to_string(), true)
+            .field("Visible", format!("{}ms", visible_ms), true)
+            .field("Deleted", format!("{} cache / {} scan / {} total", fast, scan, total), false)
+            .footer(serenity::all::CreateEmbedFooter::new(
+                format!("Cleanup took {}", humantime::format_duration(cleanup_dur)),
+            ));
+        self.log_embed(&ctx, embed, guild_id).await?;
+        
         Ok(())
     }
 

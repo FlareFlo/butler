@@ -1,6 +1,6 @@
 use crate::ButlerResult;
 use crate::commands::Data;
-use itertools::Itertools;
+
 use serenity::all::{ChannelId, GuildId, RoleId};
 use sqlx::{query, query_as};
 
@@ -50,8 +50,8 @@ impl Data {
                 SET channel_ids = $2, safe_role_ids = $3, enabled = $4;
             ",
             guild_id.get() as i64,
-            &channel_ids.map(|e| e.get() as i64).collect_vec(),
-            &safe_role_ids.map(|e| e.get() as i64).collect_vec(),
+            &channel_ids.map(|e| e.get() as i64).collect::<Vec<i64>>(),
+            &safe_role_ids.map(|e| e.get() as i64).collect::<Vec<i64>>(),
             enabled
         )
         .execute(&self.pool)
