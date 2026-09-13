@@ -10,10 +10,13 @@ use tracing::{info, warn};
 
 impl Handler {
     pub async fn handle_honeypot(&self, ctx: Context, msg: &Message) -> ButlerResult<()> {
-        if let Ok(member) = msg.member(ctx.clone()).await {
+        let Some(guild_id) = msg.guild_id else { return Ok(()); };
+        
+        let member_roles = msg.member.as_ref().map(|m| &m.roles);
+        if let Some(roles) = member_roles {
             let honeypot = self
                 .database
-                .get_honeypot_from_guild_id(member.guild_id)
+                .get_honeypot_from_guild_id(guild_id)
                 .await?;
 
             let Some(honeypot) = honeypot else {
@@ -34,11 +37,11 @@ impl Handler {
             if honeypot
                 .safe_role_ids
                 .iter()
-                .any(|&safe| member.roles.iter().any(|role| safe == role.get() as i64))
+                .any(|&safe| roles.iter().any(|role| safe == role.get() as i64))
             {
                 info!(
                     "{} talked in {} but their role is whitelisted",
-                    member.display_name(),
+                    msg.author.name,
                     msg.channel_id.name(&ctx).await?
                 );
                 return Ok(());
@@ -50,31 +53,32 @@ impl Handler {
 
             let reason = format!(
                 "Kicked {} for sending message into {}\nVisible for {}ms before kick",
-                member,
+                msg.author.name,
                 msg.channel(&ctx).await?,
                 visible_ms
             );
 
-            member
-                .kick_with_reason(ctx.clone(), &reason)
+            info!("Attempting to kick {} from honeypot...", msg.author.name);
+            guild_id
+                .kick_with_reason(ctx.clone(), msg.author.id, &reason)
                 .await
-                .with_context(|| format!("Failed to kick {}. Check permissions and role ordering.", member.display_name()))?;
+                .with_context(|| format!("Failed to kick {}. Check permissions and role ordering.", msg.author.name))?;
             warn!(
                 "Successfully kicked {} for sending message into {} (visible: {}ms)",
-                member.display_name(),
+                msg.author.name,
                 msg.channel_id.name(&ctx).await?,
                 visible_ms
             );
             self.database
                 .log_action_to_journal(
-                    member.guild_id,
-                    member.user.id,
+                    guild_id,
+                    msg.author.id,
                     ModerationAction::KickedHoneypot,
                     None,
                 )
                 .await?;
 
-            info!("Started cleaning up after {}", member.user.id);
+            info!("Started cleaning up after {}", msg.author.id);
             let (fast, scan) = self.cleanup_last_hour(&ctx, msg).await?;
             let total = fast + scan;
 
@@ -83,14 +87,14 @@ impl Handler {
             let embed = CreateEmbed::new()
                 .title("Honeypot Kick")
                 .color(0xED4245)
-                .field("User", member.to_string(), true)
+                .field("User", msg.author.to_string(), true)
                 .field("Channel", msg.channel(&ctx).await?.to_string(), true)
                 .field("Visible", format!("{}ms", visible_ms), true)
                 .field("Deleted", format!("{} cache / {} scan / {} total", fast, scan, total), false)
                 .footer(serenity::all::CreateEmbedFooter::new(
                     format!("Cleanup took {}", humantime::format_duration(cleanup_dur)),
                 ));
-            self.log_embed(&ctx, embed, member.guild_id).await?;
+            self.log_embed(&ctx, embed, guild_id).await?;
         }
         Ok(())
     }
