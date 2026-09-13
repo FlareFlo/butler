@@ -7,6 +7,7 @@ use serenity::all::Member;
 
 #[poise::command(slash_command, required_permissions = "BAN_MEMBERS", guild_only, description_localized("en-US", "Bans a user from the server"))]
 pub async fn ban(
+/// Bans a user from the server
     ctx: PoiseContext<'_>,
     #[description = "Target user to ban"] who: Member,
     #[description = "Reason sent to banned user"] msg: Option<String>,
