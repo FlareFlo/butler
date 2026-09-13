@@ -5,6 +5,7 @@ use poise::serenity_prelude::Channel;
 
 #[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only)]
 pub async fn logging_channel(
+/// Sets or unsets the channel for moderation logs
     ctx: PoiseContext<'_>,
     #[description = "Channel to log messages to"] channel: Option<Channel>,
 ) -> Result<(), Report> {

@@ -9,6 +9,7 @@ use crate::commands::Data;
 use crate::commands::account_age::set_minimum_account_age;
 use crate::commands::ban::ban;
 use crate::commands::config::get_server_config;
+use crate::commands::stats::stats;
 use crate::commands::help::help;
 use crate::commands::honeypot::{
     add_honeypot_channel, add_safe_role, remove_honeypot_channel, remove_safe_role, setup_honeypot,
@@ -84,6 +85,7 @@ async fn main() -> ButlerResult<()> {
                 add_honeypot_channel(),
                 remove_honeypot_channel(),
                 ban(),
+                stats(),
             ],
             on_error: |error| Box::pin(async move {
                 match error {
