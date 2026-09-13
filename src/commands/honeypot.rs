@@ -8,7 +8,6 @@ use std::iter::once;
 
 #[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Initializes the honeypot configuration for this server"))]
 pub async fn setup_honeypot(
-/// Initializes the honeypot configuration for this server
     ctx: PoiseContext<'_>,
     #[description = "Honeypot channel"] honeypot: Channel,
     #[description = "Safe role that will not be acted upon when typing in the honeypot"] safe_role: Role,
@@ -34,7 +33,6 @@ pub async fn setup_honeypot(
 
 #[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Adds a new safe role to the honeypot whitelist"))]
 pub async fn add_safe_role(
-/// Adds a new safe role to the honeypot whitelist
     ctx: PoiseContext<'_>,
     #[description = "Safe role that will not be acted upon when typing in the honeypot"] safe_role: Role,
 ) -> Result<(), Report> {
@@ -60,7 +58,6 @@ pub async fn add_safe_role(
 
 #[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Removes a safe role from the honeypot whitelist"))]
 pub async fn remove_safe_role(
-/// Removes a safe role from the honeypot whitelist
     ctx: PoiseContext<'_>,
     #[description = "Safe role that will not be acted upon when typing in the honeypot"] safe_role: Role,
 ) -> Result<(), Report> {
@@ -86,7 +83,6 @@ pub async fn remove_safe_role(
 
 #[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Adds an additional channel to the honeypot system"))]
 pub async fn add_honeypot_channel(
-/// Adds an additional channel to the honeypot system
     ctx: PoiseContext<'_>,
     #[description = "Honeypot channel that gets users punished if used"] channel: Channel,
 ) -> Result<(), Report> {
@@ -112,7 +108,6 @@ pub async fn add_honeypot_channel(
 
 #[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Removes a channel from the honeypot system"))]
 pub async fn remove_honeypot_channel(
-/// Removes a channel from the honeypot system
     ctx: PoiseContext<'_>,
     #[description = "Honeypot channel that gets users punished if used"] channel: Channel,
 ) -> Result<(), Report> {

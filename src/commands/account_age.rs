@@ -5,7 +5,6 @@ use std::time::Duration;
 
 #[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Sets or disables the minimum account age requirement"))]
 pub async fn set_minimum_account_age(
-/// Sets or disables the minimum account age requirement
     ctx: PoiseContext<'_>,
     #[description = "Minimum account age in days"] minimum_account_age_days: Option<u64>,
 ) -> Result<(), Report> {
