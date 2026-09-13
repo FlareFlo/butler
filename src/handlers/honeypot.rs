@@ -9,13 +9,15 @@ use time::OffsetDateTime;
 use tracing::{info, warn};
 
 impl Handler {
+    #[tracing::instrument(skip(self, ctx, msg), err)]
     pub async fn handle_honeypot(&self, ctx: Context, msg: &Message) -> ButlerResult<()> {
         let Some(guild_id) = msg.guild_id else { return Ok(()); };
         
         let honeypot = self
             .database
             .get_honeypot_from_guild_id(guild_id)
-            .await?;
+            .await
+            .with_context(|| format!("Failed to fetch honeypot for guild {}", guild_id))?;
 
         let Some(honeypot) = honeypot else {
             return Ok(());
@@ -111,13 +113,15 @@ impl Handler {
 
     /// Deletes all messages of user for past hour
     /// Returns (fast_pass_count, scan_pass_count)
+    #[tracing::instrument(skip(self, ctx, msg), err)]
     pub async fn cleanup_last_hour(&self, ctx: &Context, msg: &Message) -> ButlerResult<(u64, u64)> {
         let guild_id = msg.guild_id.context("missing guild id")?;
 
         let user_id = msg.author.id;
 
         // Get all channels in the guild
-        let channels = guild_id.channels(&ctx.http).await?;
+        let channels = guild_id.channels(&ctx.http).await
+            .with_context(|| format!("Failed to fetch channels for guild {}", guild_id))?;
 
         // Fastpass deleting known cached messages
         let cached: Vec<(ChannelId, Vec<MessageId>)> = MSG_CACHE
@@ -160,6 +164,7 @@ impl Handler {
         Ok((fast_count, scan_count))
     }
 
+    #[tracing::instrument(skip(self, ctx), err)]
     async fn clean_channel_after(&self, ctx: &Context, channel_id: ChannelId, user_id: UserId, before_id: Option<MessageId>, count: &mut u64) -> ButlerResult<Option<MessageId>> {
         let mut req = GetMessages::new().limit(100);
         if let Some(id) = before_id {

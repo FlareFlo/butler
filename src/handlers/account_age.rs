@@ -1,11 +1,13 @@
 use crate::ButlerResult;
 use crate::db::action_journal::ModerationAction;
 use crate::handlers::Handler;
+use color_eyre::eyre::Context as _;
 use serenity::all::{Context, CreateEmbed, CreateMessage, Message};
 use std::ops::Add;
 use tracing::{info, warn};
 
 impl Handler {
+    #[tracing::instrument(skip(self, ctx, msg), err)]
     pub async fn check_account_age_from_message(
         &self,
         ctx: &Context,
@@ -17,11 +19,13 @@ impl Handler {
         self.check_account_age(ctx, &msg.author, guild_id).await
     }
 
+    #[tracing::instrument(skip(self, ctx, user), err)]
     pub async fn check_account_age(&self, ctx: &Context, user: &serenity::all::User, guild_id: serenity::all::GuildId) -> ButlerResult<()> {
         let Some(min_age) = self
             .database
             .get_minimum_account_age(guild_id)
-            .await?
+            .await
+            .with_context(|| format!("Failed to fetch minimum account age for guild {}", guild_id))?
         else {
             // Minimum hours are not configured/enabled
             return Ok(());

@@ -25,11 +25,13 @@ impl EventHandler for Handler {
         self.process_result(&ctx, res, msg.guild_id).await;
     }
 
+    #[tracing::instrument(skip(self, cx))]
     async fn ready(&self, cx: Context, ready: Ready) {
         info!("{} is connected!", ready.user.name);
         cx.set_activity(Some(ActivityData::watching("for bad actors")))
     }
 
+    #[tracing::instrument(skip(self, ctx))]
     async fn guild_delete(&self, ctx: Context, incomplete: UnavailableGuild, _full: Option<Guild>) {
         // This means the bot has been removed from the server
         if incomplete.unavailable == false {
@@ -38,6 +40,7 @@ impl EventHandler for Handler {
         }
     }
 
+    #[tracing::instrument(skip(self, ctx))]
     async fn guild_create(&self, ctx: Context, guild: Guild, is_new: Option<bool>) {
         if is_new == Some(true) {
             let res = self.database.ensure_guild_exists(guild.id).await;
@@ -56,6 +59,7 @@ pub fn evict_stale_cache_entries() {
     });
 }
 
+#[tracing::instrument(skip(ctx, msg))]
 async fn handle_dm(ctx: Context, msg: &Message) {
     // Ignore non-DMs
     if let Some(gid) = msg.guild_id {

@@ -85,6 +85,18 @@ async fn main() -> ButlerResult<()> {
                 remove_honeypot_channel(),
                 ban(),
             ],
+            on_error: |error| Box::pin(async move {
+                match error {
+                    poise::FrameworkError::Command { error, ctx, .. } => {
+                        tracing::error!("Command '{}' failed: {:?}", ctx.command().name, error);
+                    }
+                    error => {
+                        if let Err(e) = poise::builtins::on_error(error).await {
+                            tracing::error!("Error while handling error: {}", e);
+                        }
+                    }
+                }
+            }),
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {
