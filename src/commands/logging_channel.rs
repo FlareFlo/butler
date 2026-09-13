@@ -3,7 +3,12 @@ use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
 use poise::serenity_prelude::Channel;
 
-#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Sets or unsets the channel for moderation logs"))]
+#[poise::command(
+    slash_command,
+    required_permissions = "MODERATE_MEMBERS",
+    guild_only,
+    description_localized("en-US", "Sets or unsets the channel for moderation logs")
+)]
 pub async fn logging_channel(
     ctx: PoiseContext<'_>,
     #[description = "Channel to log messages to"] channel: Option<Channel>,
@@ -13,9 +18,7 @@ pub async fn logging_channel(
         .context("Command should be guild only but guild_id was unset")?;
 
     if let Some(channel) = channel {
-        ctx.data()
-            .set_logging_channel(channel.id(), guild)
-            .await?;
+        ctx.data().set_logging_channel(channel.id(), guild).await?;
         ctx.reply(format!("Set logging channel to {channel}"))
             .await?;
     } else {

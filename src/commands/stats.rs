@@ -13,7 +13,10 @@ pub async fn stats(ctx: PoiseContext<'_>) -> Result<(), Report> {
         }
     }
 
-    let stats = format!("Protecting **{}** users across **{}** servers.", user_count, guild_count);
+    let stats = format!(
+        "Protecting **{}** users across **{}** servers.",
+        user_count, guild_count
+    );
     ctx.reply(stats).await?;
 
     Ok(())

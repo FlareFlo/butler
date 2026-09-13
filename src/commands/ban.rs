@@ -5,7 +5,12 @@ use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
 use serenity::all::Member;
 
-#[poise::command(slash_command, required_permissions = "BAN_MEMBERS", guild_only, description_localized("en-US", "Bans a user from the server"))]
+#[poise::command(
+    slash_command,
+    required_permissions = "BAN_MEMBERS",
+    guild_only,
+    description_localized("en-US", "Bans a user from the server")
+)]
 pub async fn ban(
     ctx: PoiseContext<'_>,
     #[description = "Target user to ban"] who: Member,

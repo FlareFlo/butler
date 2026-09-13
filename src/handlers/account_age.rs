@@ -20,12 +20,19 @@ impl Handler {
     }
 
     #[tracing::instrument(skip(self, ctx, user), err)]
-    pub async fn check_account_age(&self, ctx: &Context, user: &serenity::all::User, guild_id: serenity::all::GuildId) -> ButlerResult<()> {
+    pub async fn check_account_age(
+        &self,
+        ctx: &Context,
+        user: &serenity::all::User,
+        guild_id: serenity::all::GuildId,
+    ) -> ButlerResult<()> {
         let Some(min_age) = self
             .database
             .get_minimum_account_age(guild_id)
             .await
-            .with_context(|| format!("Failed to fetch minimum account age for guild {}", guild_id))?
+            .with_context(|| {
+                format!("Failed to fetch minimum account age for guild {}", guild_id)
+            })?
         else {
             // Minimum hours are not configured/enabled
             return Ok(());
@@ -59,18 +66,17 @@ impl Handler {
         );
 
         if let Err(e) = guild_id.kick_with_reason(&ctx.http, user.id, &reason).await {
-            tracing::error!("Failed to kick {}! Check bot permissions and role hierarchy. Error: {}", user.name, e);
+            tracing::error!(
+                "Failed to kick {}! Check bot permissions and role hierarchy. Error: {}",
+                user.name,
+                e
+            );
             return Err(e.into());
         }
         warn!("Successfully kicked {} for being too new!", user.name);
 
         self.database
-            .log_action_to_journal(
-                guild_id,
-                user.id,
-                ModerationAction::KickedAccountAge,
-                None,
-            )
+            .log_action_to_journal(guild_id, user.id, ModerationAction::KickedAccountAge, None)
             .await?;
 
         // Log the kick
@@ -78,8 +84,16 @@ impl Handler {
             .title("Account Age Kick")
             .color(0xF57C00)
             .field("User", user.id.to_string(), true)
-            .field("Account created", format!("<t:{}:f>", created_at.timestamp()), true)
-            .field("Minimum age", humantime::format_duration(min_age).to_string(), true);
+            .field(
+                "Account created",
+                format!("<t:{}:f>", created_at.timestamp()),
+                true,
+            )
+            .field(
+                "Minimum age",
+                humantime::format_duration(min_age).to_string(),
+                true,
+            );
         self.log_embed(&ctx, embed, guild_id).await?;
         Ok(())
     }

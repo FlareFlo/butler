@@ -9,20 +9,20 @@ use crate::commands::Data;
 use crate::commands::account_age::set_minimum_account_age;
 use crate::commands::ban::ban;
 use crate::commands::config::get_server_config;
-use crate::commands::stats::stats;
 use crate::commands::help::help;
 use crate::commands::honeypot::{
     add_honeypot_channel, add_safe_role, remove_honeypot_channel, remove_safe_role, setup_honeypot,
 };
 use crate::commands::logging_channel::logging_channel;
+use crate::commands::stats::stats;
 use color_eyre::Report;
-use handlers::{evict_stale_cache_entries, Handler};
+use handlers::{Handler, evict_stale_cache_entries};
 use serde::Deserialize;
-use std::time::Duration;
 use serenity::prelude::*;
 use sqlx::PgPool;
 use sqlx::migrate::Migrator;
 use std::process::exit;
+use std::time::Duration;
 use std::{env, fs};
 use tracing::error;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
@@ -46,9 +46,7 @@ async fn main() -> ButlerResult<()> {
         .unwrap_or_else(|_| EnvFilter::new("info,serenity::gateway::shard=warn"));
 
     tracing::subscriber::set_global_default(
-        FmtSubscriber::builder()
-            .with_env_filter(filter)
-            .finish()
+        FmtSubscriber::builder().with_env_filter(filter).finish(),
     )?;
 
     ctrlc::set_handler(move || {
@@ -65,8 +63,7 @@ async fn main() -> ButlerResult<()> {
     let intents = GatewayIntents::GUILDS
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::GUILD_MESSAGES
-        | GatewayIntents::GUILD_MODERATION
-;
+        | GatewayIntents::GUILD_MODERATION;
     if config.uk_url != "disabled" {
         UptimePusher::new(&config.uk_url, true).spawn_background();
     }
@@ -87,18 +84,20 @@ async fn main() -> ButlerResult<()> {
                 ban(),
                 stats(),
             ],
-            on_error: |error| Box::pin(async move {
-                match error {
-                    poise::FrameworkError::Command { error, ctx, .. } => {
-                        tracing::error!("Command '{}' failed: {:?}", ctx.command().name, error);
-                    }
-                    error => {
-                        if let Err(e) = poise::builtins::on_error(error).await {
-                            tracing::error!("Error while handling error: {}", e);
+            on_error: |error| {
+                Box::pin(async move {
+                    match error {
+                        poise::FrameworkError::Command { error, ctx, .. } => {
+                            tracing::error!("Command '{}' failed: {:?}", ctx.command().name, error);
+                        }
+                        error => {
+                            if let Err(e) = poise::builtins::on_error(error).await {
+                                tracing::error!("Error while handling error: {}", e);
+                            }
                         }
                     }
-                }
-            }),
+                })
+            },
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {

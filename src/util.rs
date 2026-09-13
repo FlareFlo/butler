@@ -1,9 +1,9 @@
-use std::fmt::Display;
 use crate::ButlerResult;
 use crate::handlers::Handler;
 use color_eyre::eyre::ContextCompat;
 use serenity::all::{ChannelId, Context, CreateEmbed, CreateMessage, GuildId};
 use sqlx::query;
+use std::fmt::Display;
 
 impl Handler {
     pub async fn process_result<T, E: Display>(
@@ -18,7 +18,11 @@ impl Handler {
             if let Some(guild_id) = guild_id {
                 let err = self.log_discord(ctx, &errstr, guild_id).await;
                 if let Err(err) = err {
-                    tracing::error!("Failed to log to discord (Guild: {}): {}", guild_id, err.to_string());
+                    tracing::error!(
+                        "Failed to log to discord (Guild: {}): {}",
+                        guild_id,
+                        err.to_string()
+                    );
                 }
             }
         }
@@ -43,9 +47,13 @@ WHERE id = $1
         .context("guild not found")?;
 
         let log_message = CreateMessage::new().content(reason);
-        ChannelId::new(query.logging_channel.context("Logging channel not configured for this guild")? as _)
-            .send_message(&ctx.http, log_message)
-            .await?;
+        ChannelId::new(
+            query
+                .logging_channel
+                .context("Logging channel not configured for this guild")? as _,
+        )
+        .send_message(&ctx.http, log_message)
+        .await?;
         Ok(())
     }
 
@@ -68,9 +76,13 @@ WHERE id = $1
         .context("guild not found")?;
 
         let log_message = CreateMessage::new().embed(embed);
-        ChannelId::new(query.logging_channel.context("Logging channel not configured for this guild")? as _)
-            .send_message(&ctx.http, log_message)
-            .await?;
+        ChannelId::new(
+            query
+                .logging_channel
+                .context("Logging channel not configured for this guild")? as _,
+        )
+        .send_message(&ctx.http, log_message)
+        .await?;
         Ok(())
     }
 }

@@ -25,10 +25,7 @@ impl Data {
         Ok(())
     }
 
-    pub async fn reset_logging_channel(
-        &self,
-        guild: GuildId,
-    ) -> ButlerResult<()> {
+    pub async fn reset_logging_channel(&self, guild: GuildId) -> ButlerResult<()> {
         self.ensure_guild_exists(guild).await?;
 
         query!(
@@ -44,10 +41,7 @@ impl Data {
         Ok(())
     }
 
-    pub async fn get_logging_channel(
-        &self,
-        guild: GuildId,
-    ) -> ButlerResult<Option<ChannelId>> {
+    pub async fn get_logging_channel(&self, guild: GuildId) -> ButlerResult<Option<ChannelId>> {
         let record = query!(
             "
 			SELECT logging_channel

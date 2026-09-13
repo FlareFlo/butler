@@ -3,7 +3,12 @@ use crate::commands::util::{channels_to_string, roles_to_string};
 use color_eyre::Report;
 use color_eyre::eyre::ContextCompat;
 
-#[poise::command(slash_command, required_permissions = "MODERATE_MEMBERS", guild_only, description_localized("en-US", "Shows the current bot configuration for the server"))]
+#[poise::command(
+    slash_command,
+    required_permissions = "MODERATE_MEMBERS",
+    guild_only,
+    description_localized("en-US", "Shows the current bot configuration for the server")
+)]
 pub async fn get_server_config(ctx: PoiseContext<'_>) -> Result<(), Report> {
     let guild = ctx
         .guild_id()

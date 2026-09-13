@@ -11,8 +11,10 @@ use tracing::{info, warn};
 impl Handler {
     #[tracing::instrument(skip(self, ctx, msg), err)]
     pub async fn handle_honeypot(&self, ctx: Context, msg: &Message) -> ButlerResult<()> {
-        let Some(guild_id) = msg.guild_id else { return Ok(()); };
-        
+        let Some(guild_id) = msg.guild_id else {
+            return Ok(());
+        };
+
         let honeypot = self
             .database
             .get_honeypot_from_guild_id(guild_id)
@@ -71,8 +73,15 @@ impl Handler {
         );
 
         info!("Attempting to kick {} from honeypot...", msg.author.name);
-        if let Err(e) = guild_id.kick_with_reason(ctx.clone(), msg.author.id, &reason).await {
-            tracing::error!("Failed to kick {}. Check permissions and role ordering. Error: {}", msg.author.name, e);
+        if let Err(e) = guild_id
+            .kick_with_reason(ctx.clone(), msg.author.id, &reason)
+            .await
+        {
+            tracing::error!(
+                "Failed to kick {}. Check permissions and role ordering. Error: {}",
+                msg.author.name,
+                e
+            );
             return Err(e.into());
         }
         warn!(
@@ -95,32 +104,44 @@ impl Handler {
         let total = fast + scan;
 
         let cleanup_time = OffsetDateTime::now_local()?;
-        let cleanup_dur = std::time::Duration::from_millis((cleanup_time - posted).whole_milliseconds() as u64);
+        let cleanup_dur =
+            std::time::Duration::from_millis((cleanup_time - posted).whole_milliseconds() as u64);
         let embed = CreateEmbed::new()
             .title("Honeypot Kick")
             .color(0xED4245)
             .field("User", msg.author.to_string(), true)
             .field("Channel", msg.channel(&ctx).await?.to_string(), true)
             .field("Visible", format!("{}ms", visible_ms), true)
-            .field("Deleted", format!("{} cache / {} scan / {} total", fast, scan, total), false)
-            .footer(serenity::all::CreateEmbedFooter::new(
-                format!("Cleanup took {}", humantime::format_duration(cleanup_dur)),
-            ));
+            .field(
+                "Deleted",
+                format!("{} cache / {} scan / {} total", fast, scan, total),
+                false,
+            )
+            .footer(serenity::all::CreateEmbedFooter::new(format!(
+                "Cleanup took {}",
+                humantime::format_duration(cleanup_dur)
+            )));
         self.log_embed(&ctx, embed, guild_id).await?;
-        
+
         Ok(())
     }
 
     /// Deletes all messages of user for past hour
     /// Returns (fast_pass_count, scan_pass_count)
     #[tracing::instrument(skip(self, ctx, msg), err)]
-    pub async fn cleanup_last_hour(&self, ctx: &Context, msg: &Message) -> ButlerResult<(u64, u64)> {
+    pub async fn cleanup_last_hour(
+        &self,
+        ctx: &Context,
+        msg: &Message,
+    ) -> ButlerResult<(u64, u64)> {
         let guild_id = msg.guild_id.context("missing guild id")?;
 
         let user_id = msg.author.id;
 
         // Get all channels in the guild
-        let channels = guild_id.channels(&ctx.http).await
+        let channels = guild_id
+            .channels(&ctx.http)
+            .await
             .with_context(|| format!("Failed to fetch channels for guild {}", guild_id))?;
 
         // Fastpass deleting known cached messages
@@ -154,7 +175,9 @@ impl Handler {
                 // Scan up to 300 messages per channel
                 let mut last_id = None;
                 for _ in 0..3 {
-                    last_id = self.clean_channel_after(ctx, channel_id, user_id, last_id, &mut scan_count).await?;
+                    last_id = self
+                        .clean_channel_after(ctx, channel_id, user_id, last_id, &mut scan_count)
+                        .await?;
                     if last_id.is_none() {
                         break;
                     }
@@ -165,7 +188,14 @@ impl Handler {
     }
 
     #[tracing::instrument(skip(self, ctx), err)]
-    async fn clean_channel_after(&self, ctx: &Context, channel_id: ChannelId, user_id: UserId, before_id: Option<MessageId>, count: &mut u64) -> ButlerResult<Option<MessageId>> {
+    async fn clean_channel_after(
+        &self,
+        ctx: &Context,
+        channel_id: ChannelId,
+        user_id: UserId,
+        before_id: Option<MessageId>,
+        count: &mut u64,
+    ) -> ButlerResult<Option<MessageId>> {
         let mut req = GetMessages::new().limit(100);
         if let Some(id) = before_id {
             req = req.before(id);

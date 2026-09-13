@@ -1,10 +1,13 @@
-use std::sync::LazyLock;
+use crate::Config;
+use crate::commands::Data;
 use chrono::Utc;
 use dashmap::DashMap;
-use crate::commands::Data;
-use crate::Config;
 use poise::async_trait;
-use serenity::all::{ActivityData, ChannelId, Context, EventHandler, Guild, GuildId, Message, MessageId, Ready, UnavailableGuild, UserId};
+use serenity::all::{
+    ActivityData, ChannelId, Context, EventHandler, Guild, GuildId, Message, MessageId, Ready,
+    UnavailableGuild, UserId,
+};
+use std::sync::LazyLock;
 use tracing::info;
 
 mod account_age;
@@ -49,7 +52,8 @@ impl EventHandler for Handler {
     }
 }
 
-pub static MSG_CACHE: LazyLock<DashMap<(GuildId, UserId, ChannelId), Vec<MessageId>>>  = LazyLock::new(||DashMap::<(GuildId, UserId, ChannelId), Vec<MessageId>>::new());
+pub static MSG_CACHE: LazyLock<DashMap<(GuildId, UserId, ChannelId), Vec<MessageId>>> =
+    LazyLock::new(|| DashMap::<(GuildId, UserId, ChannelId), Vec<MessageId>>::new());
 
 pub fn evict_stale_cache_entries() {
     let cutoff = Utc::now() - chrono::Duration::hours(1);
